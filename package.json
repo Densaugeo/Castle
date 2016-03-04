@@ -1,0 +1,35 @@
+{
+  "name": "castle",
+  "version": "0.1.0",
+  "engines": {},
+  "description": "WebGL castle",
+  "main": "castle.html",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Densaugeo/Castle"
+  },
+  "keywords": [],
+  "author": "Densaugeo",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "files": [
+    "castle",
+    "font-awesome",
+    "models",
+    "castle.html",
+    "draggabilly.pkgd.min.js",
+    "EventEmitter.min.js",
+    "LICENSE",
+    "package.json",
+    "panelui.cs",
+    "panelui_dark.css",
+    "panelui.js",
+    "panelui_light.css",
+    "README.md",
+    "three.Densaugeo.js",
+    "three.min.js",
+    "waternormals.jpg"
+  ]
+}
