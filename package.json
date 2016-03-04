@@ -1,6 +1,6 @@
 {
   "name": "castle",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "engines": {},
   "description": "WebGL castle",
   "main": "castle.html",
@@ -24,7 +24,7 @@
     "EventEmitter.min.js",
     "LICENSE",
     "package.json",
-    "panelui.cs",
+    "panelui.css",
     "panelui_dark.css",
     "panelui.js",
     "panelui_light.css",
