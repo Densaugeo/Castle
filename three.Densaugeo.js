@@ -524,7 +524,7 @@ THREE.Densaugeo.FreeControls = function(camera, domElement, options) {
   var gamepads = [];
   
   window.addEventListener('gamepadconnected', function(e) {
-    gamepads.push(e.gamepad);
+    gamepads.push(e.gamepad.index);
   });
   
   window.addEventListener('gamepaddisconnected', function(e) {
@@ -543,7 +543,7 @@ THREE.Densaugeo.FreeControls = function(camera, domElement, options) {
   
   // Working variables for camLoop
   var translateX = 0, translateY = 0, translateZ = 0, translateGlobalZ = 0;
-  var rotateX = 0, rotateY = 0, rotateZ = 0, rotateGlobalZ = 0, axes;
+  var rotateX = 0, rotateY = 0, rotateZ = 0, rotateGlobalZ = 0, gp, axes;
   
   var camLoop = function() {
     time = Date.now() - timePrevious;
@@ -561,14 +561,24 @@ THREE.Densaugeo.FreeControls = function(camera, domElement, options) {
     if(inputs[self.keyTurnRight  ]) rotateGlobalZ    -= time*self.rotationKeySpeed;
     
     for(var i = 0, endi = gamepads.length; i < endi; ++i) {
-      axes = gamepads[i].axes;
+      gp = navigator.getGamepads()[i];
+      axes = gp.axes;
       
-      if(Math.abs(axes[0]) > 0.05) translateX    += axes[0]*time*self.joystickPanSpeed;
-      if(Math.abs(axes[1]) > 0.05) translateY    -= axes[1]*time*self.joystickPanSpeed;
-      if(Math.abs(axes[3]) > 0.05) rotateGlobalZ -= axes[3]*time*self.joystickRotSpeed;
-      if(Math.abs(axes[4]) > 0.05) rotateX       -= axes[4]*time*self.joystickRotSpeed;
-      
-      if(axes[2] > -0.95 || axes[5] > -0.95) translateZ -= (axes[5] - axes[2])*time*self.joystickThrottleSpeed;
+      if(gp.mapping === '') {
+        if(Math.abs(axes[0]) > 0.05) translateX    += axes[0]*time*self.joystickPanSpeed;
+        if(Math.abs(axes[1]) > 0.05) translateY    -= axes[1]*time*self.joystickPanSpeed;
+        if(Math.abs(axes[3]) > 0.05) rotateGlobalZ -= axes[3]*time*self.joystickRotSpeed;
+        if(Math.abs(axes[4]) > 0.05) rotateX       -= axes[4]*time*self.joystickRotSpeed;
+        
+        if(axes[2] > -0.95 || axes[5] > -0.95) translateZ -= (axes[5] - axes[2])*time*self.joystickThrottleSpeed/2;
+      } else if(gp.mapping = 'standard') {
+        if(Math.abs(axes[0]) > 0.05) translateX    += axes[0]*time*self.joystickPanSpeed;
+        if(Math.abs(axes[1]) > 0.05) translateY    -= axes[1]*time*self.joystickPanSpeed;
+        if(Math.abs(axes[2]) > 0.05) rotateGlobalZ -= axes[2]*time*self.joystickRotSpeed;
+        if(Math.abs(axes[3]) > 0.05) rotateX       -= axes[3]*time*self.joystickRotSpeed;
+        
+        if(gp.buttons[6].value > 0.025 || gp.buttons[7].value > 0.025) translateZ -= (gp.buttons[7].value - gp.buttons[6].value)*time*self.joystickThrottleSpeed;
+      }
     }
     
     if(translateX) {
@@ -602,7 +612,7 @@ THREE.Densaugeo.FreeControls = function(camera, domElement, options) {
     if(rotateGlobalZ) {
       // Global Z rotation retains global position
       var position = THREE.Vector3.prototype.setFromMatrixPosition(camera.matrix);
-      camera.matrix.multiplyMatrices(new THREE.Matrix4().makeRotationZ(rotateGlobalZ + time*rotationRateAlpha), camera.matrix);
+      camera.matrix.multiplyMatrices(new THREE.Matrix4().makeRotationZ(rotateGlobalZ), camera.matrix);
       camera.matrix.setPosition(position);
     }
     
