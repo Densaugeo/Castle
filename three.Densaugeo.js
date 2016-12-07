@@ -725,8 +725,8 @@ THREE.Densaugeo.Picker = function Picker(options) {
     
     var boundingRect = self.renderer.domElement.getBoundingClientRect();
     
-    mouse.x = (e.clientX - boundingRect.x)/boundingRect.width*2 - 1;
-    mouse.y = (boundingRect.y - e.clientY)/boundingRect.height*2 + 1;
+    mouse.x = (e.clientX - boundingRect.left)/boundingRect.width*2 - 1;
+    mouse.y = (boundingRect.top - e.clientY)/boundingRect.height*2 + 1;
     
     raycaster.setFromCamera(mouse, camera);
     
