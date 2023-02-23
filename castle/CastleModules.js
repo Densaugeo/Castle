@@ -4,7 +4,8 @@
  * 
  * @description Modules for my cloud castle
  */
-var CastleModules = {};
+import * as THREE from '../three.module.js'
+import * as THREE_Densaugeo from '../three.Densaugeo.js';
 
 /**
  * @module CastleModules.HelpPanel inherits PanelUI.Panel
@@ -13,7 +14,7 @@ var CastleModules = {};
  * @example var helpPanel = new CastleModules.HelpPanel();
  * @example helpPanel.open();
  */
-CastleModules.HelpPanel = function HelpPanel() {
+export const HelpPanel = function HelpPanel() {
   PanelUI.Panel.call(this, {id: 'help', heading: 'Controls', startOpen: false, accessKey: 'c'});
   
   this.domElement.appendChild(fE('div', {}, [
@@ -59,8 +60,8 @@ CastleModules.HelpPanel = function HelpPanel() {
     fE('text', {textContent: 'Left/right trigger - Throttle back/forward'}),
   ]));
 }
-CastleModules.HelpPanel.prototype = Object.create(PanelUI.Panel.prototype);
-CastleModules.HelpPanel.prototype.constructor = CastleModules.HelpPanel;
+HelpPanel.prototype = Object.create(PanelUI.Panel.prototype);
+HelpPanel.prototype.constructor = HelpPanel;
 
 /**
  * @module CastleModules.ShaderPanel inherits PanelUI.Panel
@@ -69,7 +70,7 @@ CastleModules.HelpPanel.prototype.constructor = CastleModules.HelpPanel;
  * @example var shaderPanel = new CastleModules.ShaderPanel();
  * @example shaderPanel.open();
  */
-CastleModules.ShaderPanel = function ShaderPanel(options) {
+export const ShaderPanel = function ShaderPanel(options) {
   PanelUI.Panel.call(this, {id: 'shader', heading: 'Shader Settings', accessKey: 's'});
   
   // @prop Object shaderButtons -- Holds HTMLElements used for shader selection buttons
@@ -167,22 +168,22 @@ CastleModules.ShaderPanel = function ShaderPanel(options) {
   var self = this;
   
   // @event set_material {String materialName} -- Emitted to signal a request for a new shader. Does not actually change the shader by itself
-  for(var i in this.shaderButtons) {
-    with({i: i}) this.shaderButtons[i].addEventListener('click', function(e) {
+  for(const i in this.shaderButtons) {
+    this.shaderButtons[i].addEventListener('click', function(e) {
       self.emit('set_material', {materialName: i});
     });
   }
   
-  for(var i in this.controls) {
+  for(const i in this.controls) {
     switch(this.controls[i].type) {
       case 'range':
-        with({i: i}) this.controls[i].addEventListener('input', function(e) {
+        this.controls[i].addEventListener('input', function(e) {
           self.currentShader[i] = self.controls[i].value;
           self.currentShader.updateUniforms();
         });
         break;
       case 'text':
-        with({i: i}) this.controls[i].addEventListener('change', function(e) {
+        this.controls[i].addEventListener('change', function(e) {
           self.currentShader[i].fromString(self.controls[i].value);
           self.currentShader.updateUniforms();
         });
@@ -194,11 +195,11 @@ CastleModules.ShaderPanel = function ShaderPanel(options) {
     }
   }
 }
-CastleModules.ShaderPanel.prototype = Object.create(PanelUI.Panel.prototype);
-CastleModules.ShaderPanel.prototype.constructor = CastleModules.ShaderPanel;
+ShaderPanel.prototype = Object.create(PanelUI.Panel.prototype);
+ShaderPanel.prototype.constructor = ShaderPanel;
 
 // @method proto undefined changeShader({THREE.ShaderMaterial materialRef}) -- Used to notify ShaderPanel that the shader has been changed
-CastleModules.ShaderPanel.prototype.changeShader = function(e) {
+ShaderPanel.prototype.changeShader = function(e) {
   this.currentShader = e.materialRef;
   
   for(var i in this.shaderButtons) {
@@ -227,7 +228,7 @@ CastleModules.ShaderPanel.prototype.changeShader = function(e) {
  * @example picker.on('select', objectPanel.selectHandler);
  * @example objectPanel.on('close', picker.unselect);
  */
-CastleModules.ObjectPanel = function ObjectPanel(options) {
+export const ObjectPanel = function ObjectPanel(options) {
   PanelUI.Panel.call(this, {id: 'object', heading: 'None', accessKey: 'o'});
   
   // @prop HTMLElement content -- Div tag to hold panel-specific content
@@ -240,36 +241,36 @@ CastleModules.ObjectPanel = function ObjectPanel(options) {
     this.actions[i] = fE('div');
   }
   
-  // @method undefined selectHandler({THREE.Densaugeo.IntObject target}) -- Links ObjectPanel to an interactive three.js object
-  with(this) this.selectHandler = function(e) {
-    domElement.children[0].textContent = e.target.name;
+  // @method undefined selectHandler({THREE_Densaugeo.IntObject target}) -- Links ObjectPanel to an interactive three.js object
+  this.selectHandler = e => {
+    this.domElement.children[0].textContent = e.target.name;
     
-    clear();
+    this.clear();
     
-    Object.keys(e.target.controls).forEach(function(v, i, a) {
-      actions[i].textContent = (i + 1) +  ' - ' + v;
-      actions[i].onclick = e.target.controls[v];
-      content.appendChild(actions[i]);
+    Object.keys(e.target.controls).forEach((v, i, a) => {
+      this.actions[i].textContent = (i + 1) +  ' - ' + v;
+      this.actions[i].onclick = e.target.controls[v];
+      this.content.appendChild(this.actions[i]);
     });
     
-    open();
+    this.open();
     
-    domElement.focus();
+    this.domElement.focus();
   }
   
-  with(this) this.domElement.addEventListener('keydown', function(e) {
+  this.domElement.addEventListener('keydown', e => {
     if(!e.altKey && !e.ctrlKey && e.shiftKey && 49 <= e.keyCode && e.keyCode <= 56) {
       e.stopPropagation();
       
-      actions[e.keyCode - 49].dispatchEvent(new MouseEvent('click'));
+      this.actions[e.keyCode - 49].dispatchEvent(new MouseEvent('click'));
     }
   });
 }
-CastleModules.ObjectPanel.prototype = Object.create(PanelUI.Panel.prototype);
-CastleModules.ObjectPanel.prototype.constructor = CastleModules.ObjectPanel;
+ObjectPanel.prototype = Object.create(PanelUI.Panel.prototype);
+ObjectPanel.prototype.constructor = ObjectPanel;
 
 // @method proto undefined clear() -- Clears .content
-CastleModules.ObjectPanel.prototype.clear = function() {
+ObjectPanel.prototype.clear = function() {
   while(this.content.children.length > 0) {
     this.content.removeChild(this.content.firstChild);
   }
@@ -282,17 +283,17 @@ CastleModules.ObjectPanel.prototype.clear = function() {
  * @example var shaderChanger = new CastleModules.ShaderChanger();
  * @example shaderChanger.nextMaterial(scene);
  */
-CastleModules.ShaderChanger = function ShaderChanger(options) {
+export const ShaderChanger = function ShaderChanger(options) {
   EventEmitter.call(this, options);
   
   // @prop Object shaders -- Collection of shaders to switch between. The String 'original' designates materials orignally defined on each object individually
   this.shaders = {
     original: 'original',
-    global: new THREE.Densaugeo.CoordinateMaterial({transparent: true}),
-    local: new THREE.Densaugeo.CoordinateMaterial({transparent: true, side: THREE.DoubleSide, local: true, showAxes: new THREE.Vector3(0, 0, 0)}),
-    ghost: new THREE.Densaugeo.PositionMaterial({transparent: true, alpha: 0.8}),
-    normals: new THREE.Densaugeo.NormalMaterial({transparent: true}),
-    psychedelic: new THREE.Densaugeo.PsychMaterial({transparent: true}),
+    global: new THREE_Densaugeo.CoordinateMaterial({transparent: true}),
+    local: new THREE_Densaugeo.CoordinateMaterial({transparent: true, side: THREE.DoubleSide, local: true, showAxes: new THREE.Vector3(0, 0, 0)}),
+    ghost: new THREE_Densaugeo.PositionMaterial({transparent: true, alpha: 0.8}),
+    normals: new THREE_Densaugeo.NormalMaterial({transparent: true}),
+    psychedelic: new THREE_Densaugeo.PsychMaterial({transparent: true}),
   }
   
   // @prop [String] shaderSequence -- Defualt order in which to step through shaders. Strings match keys in .shaders
@@ -320,30 +321,26 @@ CastleModules.ShaderChanger = function ShaderChanger(options) {
   // @event change {String currentShader} -- Emitted after materials have been changed. .currentShader is a String designating a key in .shaders
   
   // @method undefined nextMaterial(THREE.Object3D object) -- Changes object and its children to the next shader in .shaderSequence
-  with(this) this.nextMaterial = function(object) {
-    var previousShader = currentShader;
+  this.nextMaterial = object => {
+    var previousShader = this.currentShader;
     
-    currentShader = shaderSequence[(shaderSequence.indexOf(currentShader) + 1) % shaderSequence.length];
+    this.currentShader = this.shaderSequence[(this.shaderSequence.indexOf(this.currentShader) + 1) % this.shaderSequence.length];
     
-    changeMaterial(object, shaders[currentShader]);
+    changeMaterial(object, this.shaders[this.currentShader]);
     
-    emit('change', {currentShader: currentShader});
+    this.emit('change', {currentShader: this.currentShader});
   }
   
   // @method undefined setMaterial(THREE.Object3D object, String shaderName) -- Changes object and its children to the shader at .shaders[shaderName]
-  with(this) this.setMaterial = function(object, /*string*/ shaderName) {
-    var previousShader = currentShader;
+  this.setMaterial = (object, /*string*/ shaderName) => {
+    var previousShader = this.currentShader;
     
-    currentShader = shaderName;
+    this.currentShader = shaderName;
     
-    changeMaterial(object, shaders[currentShader]);
+    changeMaterial(object, this.shaders[this.currentShader]);
     
-    emit('change', {currentShader: currentShader});
+    this.emit('change', {currentShader: this.currentShader});
   }
 }
-CastleModules.ShaderChanger.prototype = Object.create(EventEmitter.prototype);
-CastleModules.ShaderChanger.prototype.constructor = CastleModules.ShaderChanger;
-
-if(typeof module != 'undefined' && module != null && module.exports) {
-  module.exports = CastleModules;
-}
+ShaderChanger.prototype = Object.create(EventEmitter.prototype);
+ShaderChanger.prototype.constructor = ShaderChanger;

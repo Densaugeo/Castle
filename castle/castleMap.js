@@ -7,144 +7,140 @@
  * @example scene.add(castleMap.castle);
  * @example castleMap.load(callback);
  */
-if(window.THREE == null) {
-  console.error('castleMap.js requires THREE.js');
-}
+import * as THREE from '../three.module.js'
+import * as THREE_Densaugeo from '../three.Densaugeo.js'
+import {GLTFLoader} from '../three.GLTFLoader.js';
 
-if(window.THREE.Densaugeo == null) {
-  console.error('castleMap.js requires THREE.Densaugeo.js');
-}
-
-var f3D = THREE.Densaugeo.forgeObject3D;
-var fM  = THREE.Densaugeo.forgeMesh;
-var fM4 = function(options) {
+const f3D = THREE_Densaugeo.forgeObject3D;
+const fM  = THREE_Densaugeo.forgeMesh;
+const fM4 = function(options) {
   return new THREE.Matrix4().forge(options);
 }
 
-var loader = new THREE.Densaugeo.JSONMultiLoader();
+const loader = new GLTFLoader();
 
 /**
- * @module Gate inherits THREE.Densaugeo.IntObject
+ * @module Gate inherits THREE_Densaugeo.IntObject
  * @description Used for the many Gates which appear herein
  */
-var Gate = function Gate(options) {
-  THREE.Densaugeo.IntObject.call(this, options);
-  
-  // @method undefined open() -- Open the gate (using preset matrices, exposed in .controls)
-  with(this) this.open = function() {
-    door.matrix.copy(door.matrixOpen);
+export class Gate extends THREE_Densaugeo.IntObject {
+  constructor(options) {
+    super(options);
+    
+    // @method undefined open() -- Open the gate (using preset matrices, exposed in .controls)
+    this.open = () => {
+      this.door.matrix.copy(this.door.matrixOpen);
+    }
+    
+    // @method undefined close() -- Close the gate (using preset matrices, exposed in .controls)
+    this.close = () => {
+      this.door.matrix.copy(this.door.matrixClosed);
+    }
+    
+    this.controls.Open = this.open;
+    this.controls.Close = this.close;
   }
-  
-  // @method undefined close() -- Close the gate (using preset matrices, exposed in .controls)
-  with(this) this.close = function() {
-    door.matrix.copy(door.matrixClosed);
-  }
-  
-  this.controls.Open = this.open;
-  this.controls.Close = this.close;
 }
-Gate.prototype = Object.create(THREE.Densaugeo.IntObject.prototype);
-Gate.prototype.constructor = Gate;
 
 /**
- * @module GatedTower inherits THREE.Densaugeo.IntObject
+ * @module GatedTower inherits THREE_Densaugeo.IntObject
  * @description Used for the many Gates which appear herein
  */
-var GatedTower = function GatedTower(options) {
-  THREE.Densaugeo.IntObject.call(this, options);
-  
-  // @method undefined openLower() -- Open the lower door (using preset matrices, exposed in .controls)
-  with(this) this.openLower = function() {
-    lowerDoor.matrix.copy(lowerDoor.matrixOpen);
+export class GatedTower extends THREE_Densaugeo.IntObject {
+  constructor(options) {
+    super(options);
+    
+    // @method undefined openLower() -- Open the lower door (using preset matrices, exposed in .controls)
+    this.openLower = () => {
+      this.lowerDoor.matrix.copy(this.lowerDoor.matrixOpen);
+    }
+    
+    // @method undefined closeLower() -- Close the lower door (using preset matrices, exposed in .controls)
+    this.closeLower = () => {
+      this.lowerDoor.matrix.copy(this.lowerDoor.matrixClosed);
+    }
+    
+    // @method undefined openUpper() -- Open the upper door (using preset matrices, exposed in .controls)
+    this.openUpper = () => {
+      this.upperDoor.matrix.copy(this.upperDoor.matrixOpen);
+    }
+    
+    // @method undefined closeUpper() -- Close the upper door (using preset matrices, exposed in .controls)
+    this.closeUpper = () => {
+      this.upperDoor.matrix.copy(this.upperDoor.matrixClosed);
+    }
+    
+    this.controls['Open Lower Door' ] = this.openLower;
+    this.controls['Close Lower Door'] = this.closeLower;
+    this.controls['Open Upper Door' ] = this.openUpper;
+    this.controls['Close Upper Door'] = this.closeUpper;
   }
-  
-  // @method undefined closeLower() -- Close the lower door (using preset matrices, exposed in .controls)
-  with(this) this.closeLower = function() {
-    lowerDoor.matrix.copy(lowerDoor.matrixClosed);
-  }
-  
-  // @method undefined openUpper() -- Open the upper door (using preset matrices, exposed in .controls)
-  with(this) this.openUpper = function() {
-    upperDoor.matrix.copy(upperDoor.matrixOpen);
-  }
-  
-  // @method undefined closeUpper() -- Close the upper door (using preset matrices, exposed in .controls)
-  with(this) this.closeUpper = function() {
-    upperDoor.matrix.copy(upperDoor.matrixClosed);
-  }
-  
-  this.controls['Open Lower Door' ] = this.openLower;
-  this.controls['Close Lower Door'] = this.closeLower;
-  this.controls['Open Upper Door' ] = this.openUpper;
-  this.controls['Close Upper Door'] = this.closeUpper;
 }
-GatedTower.prototype = Object.create(THREE.Densaugeo.IntObject.prototype);
-GatedTower.prototype.constructor = GatedTower;
 
 /**
- * @module DoubleGate inherits THREE.Densaugeo.IntObject
+ * @module DoubleGate inherits THREE_Densaugeo.IntObject
  * @description Used for the many Gates which appear herein
  */
-var DoubleGate = function DoubleGate(options) {
-  THREE.Densaugeo.IntObject.call(this, options);
-  
-  // @method undefined openRight() -- Open the right side of the gate (using preset matrices, exposed in .controls)
-  with(this) this.openRight = function() {
-    rightDoor.matrix.copy(rightDoor.matrixOpen);
+export class DoubleGate extends THREE_Densaugeo.IntObject {
+  constructor(options) {
+    super(options);
     
-    if(typeof rightSpiral != 'undefined') {
-      rightSpiral.children.forEach(function(v, i, a) {
-        v.matrix.forge({tz: 0.4*i, rz: 4/3*Math.PI - Math.PI/8*i});
-      });
+    // @method undefined openRight() -- Open the right side of the gate (using preset matrices, exposed in .controls)
+    this.openRight = () => {
+      this.rightDoor.matrix.copy(this.rightDoor.matrixOpen);
+      
+      if(typeof this.rightSpiral != 'undefined') {
+        this.rightSpiral.children.forEach(function(v, i, a) {
+          v.matrix.forge({tz: 0.4*i, rz: 4/3*Math.PI - Math.PI/8*i});
+        });
+      }
     }
-  }
-  
-  // @method undefined closeRight() -- Close the right side of the gate (using preset matrices, exposed in .controls)
-  with(this) this.closeRight = function() {
-    rightDoor.matrix.copy(rightDoor.matrixClosed);
     
-    if(typeof rightSpiral != 'undefined') {
-      rightSpiral.children.forEach(function(v, i, a) {
-        v.matrix.forge({tz: 0.4*i, rz: 0});
-      });
+    // @method undefined closeRight() -- Close the right side of the gate (using preset matrices, exposed in .controls)
+    this.closeRight = () => {
+      this.rightDoor.matrix.copy(this.rightDoor.matrixClosed);
+      
+      if(typeof this.rightSpiral != 'undefined') {
+        this.rightSpiral.children.forEach(function(v, i, a) {
+          v.matrix.forge({tz: 0.4*i, rz: 0});
+        });
+      }
     }
-  }
-  
-  // @method undefined openLeft() -- Open the left side of the gate (using preset matrices, exposed in .controls)
-  with(this) this.openLeft = function() {
-    leftDoor.matrix.copy(leftDoor.matrixOpen);
     
-    if(typeof leftSpiral != 'undefined') {
-      leftSpiral.children.forEach(function(v, i, a) {
-        v.matrix.forge({tz: 0.4*i, rz: -4/3*Math.PI + Math.PI/8*i});
-      });
+    // @method undefined openLeft() -- Open the left side of the gate (using preset matrices, exposed in .controls)
+    this.openLeft = () => {
+      this.leftDoor.matrix.copy(this.leftDoor.matrixOpen);
+      
+      if(typeof this.leftSpiral != 'undefined') {
+        this.leftSpiral.children.forEach(function(v, i, a) {
+          v.matrix.forge({tz: 0.4*i, rz: -4/3*Math.PI + Math.PI/8*i});
+        });
+      }
     }
-  }
-  
-  // @method undefined closeLeft() -- Close the left side of the gate (using preset matrices, exposed in .controls)
-  with(this) this.closeLeft = function() {
-    leftDoor.matrix.copy(leftDoor.matrixClosed);
     
-    if(typeof leftSpiral != 'undefined') {
-      leftSpiral.children.forEach(function(v, i, a) {
-        v.matrix.forge({tz: 0.4*i, rz: 0});
-      });
+    // @method undefined closeLeft() -- Close the left side of the gate (using preset matrices, exposed in .controls)
+    this.closeLeft = () => {
+      this.leftDoor.matrix.copy(this.leftDoor.matrixClosed);
+      
+      if(typeof this.leftSpiral != 'undefined') {
+        this.leftSpiral.children.forEach(function(v, i, a) {
+          v.matrix.forge({tz: 0.4*i, rz: 0});
+        });
+      }
     }
+    
+    this.controls['Open Right'] = this.openRight;
+    this.controls['Close Right'] = this.closeRight;
+    this.controls['Open Left'] = this.openLeft;
+    this.controls['Close Left'] = this.closeLeft;
   }
-  
-  this.controls['Open Right'] = this.openRight;
-  this.controls['Close Right'] = this.closeRight;
-  this.controls['Open Left'] = this.openLeft;
-  this.controls['Close Left'] = this.closeLeft;
 }
-DoubleGate.prototype = Object.create(THREE.Densaugeo.IntObject.prototype);
-DoubleGate.prototype.constructor = DoubleGate;
 
 /**
  * @module castleMap inherits EventEmitter
  * @description Actually defined as a singleton instance...going to worry about finding the right way to do it later
  */
-castleMap = new EventEmitter();
+export const castleMap = new EventEmitter();
 
 // @prop THREE.Object3D castle -- Base object
 castleMap.castle = new THREE.Object3D();
@@ -157,7 +153,7 @@ castleMap.fortress = new THREE.Object3D();
 
 // @prop Object gates -- All the gates of the castle
 castleMap.gates = {};
-var gates = castleMap.gates;
+const gates = castleMap.gates;
 gates.citadelInner = new Gate({name: 'Citadel Inner Gate'});
 gates.citadelOuter = new Gate({name: 'Citadel Outer Gate'});
 gates.citadelEast  = new Gate({name: 'Citadel East Gate'});
@@ -177,88 +173,20 @@ gates.seawall1     = new Gate({name: 'Seawall'});
 gates.seawall2     = new Gate({name: 'Seawall'});
 gates.seawall3     = new Gate({name: 'Seawall'});
 
-// @prop [String] modelPaths -- Paths to each THREE.js model
-castleMap.modelPaths = [
-  "models/Annex_Door.json",
-  "models/Annex_Gate.json",
-  "models/Annex_Wall_1.json",
-  "models/Annex_Wall_2.json",
-  "models/Annex_Wall_S_End.json",
-  "models/Annex_Wall_Stretched.json",
-  "models/Citadel_Door.json",
-  "models/Citadel_Door_Side.json",
-  "models/Citadel_Mezzanine.json",
-  "models/Citadel_Side.json",
-  "models/Fortress_Bridge_Extension.json",
-  "models/Fortress_Bridge.json",
-  "models/Fortress_Bridge_Wall_1_Extension.json",
-  "models/Fortress_Bridge_Wall_1.json",
-  "models/Fortress_Bridge_Wall_2.json",
-  "models/Fortress_Bridge_Wall_Mirrored_2.json",
-  "models/Fortress_Causeway_Drawbridge.json",
-  "models/Fortress_Causeway_Drop.json",
-  "models/Fortress_Causeway.json",
-  "models/Fortress_Corner.json",
-  "models/Fortress_Dock.json",
-  "models/Fortress_Gate_1_Banner.json",
-  "models/Fortress_Gate_1.json",
-  "models/Fortress_Gate_1_L_Door.json",
-  "models/Fortress_Gate_1_R_Door.json",
-  "models/Fortress_Gate_1_Spiral.json",
-  "models/Fortress_Gate_2_Drawbridge.json",
-  "models/Fortress_Gate_2.json",
-  "models/Fortress_Gate_3_Drawbridge.json",
-  "models/Fortress_Gate_3_Wall.json",
-  "models/Fortress_Gate_3.json",
-  "models/Fortress_Inner_Corner.json",
-  "models/Fortress_Ramp.json",
-  "models/Fortress_Tower_Base_1.json",
-  "models/Fortress_Tower_Base_2.json",
-  "models/Fortress_Tower_E.json",
-  "models/Fortress_Tower_Lower_Drawbridge.json",
-  "models/Fortress_Tower_Upper_Drawbridge.json",
-  "models/Fortress_Tower_W.json",
-  "models/Fortress_Wall_Battlement.json",
-  "models/Fortress_Wall.json",
-  "models/Gilded_Bridge_Wall.json",
-  "models/Gilded_Fortress_Bridge.json",
-  "models/Gilded_Keep_Battlement.json",
-  "models/Gilded_Keep_Corner.json",
-  "models/Gilded_Keep_Wall.json",
-  "models/Ground.json",
-  "models/Harbor_Bridge.json",
-  "models/Harbor_Gate.json",
-  "models/Harbor_Gate_Mirrored.json",
-  "models/Harbor_Island_Door.json",
-  "models/Harbor_Island.json",
-  "models/Harbor_Tower_N.json",
-  "models/Harbor_Tower_S.json",
-  "models/Keep_Corner.json",
-  "models/Keep_Dock_Bridge.json",
-  "models/Keep_Dock.json",
-  "models/Keep_Tower.json",
-  "models/Keep_Tower_Supports_3S.json",
-  "models/Keep_Tower_Supports.json",
-  "models/Keep_Wall_Battlement.json",
-  "models/Keep_Wall.json",
-]
-
 // @method undefined load() -- Loads all the models and fires events at start and finish
 // @event loading {} -- Requests for models have been sent to server
 // @event loaded {} -- Models have finished loading; scene is available in .castle
 castleMap.load = function() {
-  loader.loadAll(castleMap.modelPaths, function(geometries, materialses) {
-    var geometry, material;
+  loader.load('models/castle-pruned.glb', function(gltf) {
+    // Stock the O3D/Mesh forge
+    gltf.scene.children.forEach(v => {
+      fM.meshes[v.name] = v;
+      fM.meshes[v.name].position.fromArray([0, 0, 0])
+      fM.meshes[v.name].quaternion.fromArray([0, 0, 0, 1])
+      fM.meshes[v.name].scale.fromArray([1, 1, 1])
+    });
     
-    // Stock the O3D/Mesh forge. Strip paths and file extensions from model names
-    for(var i in geometries) {
-      fM.geometries[i.split('/').pop().split('.').shift()] = geometries[i];
-    }
-    for(var i in materialses) {
-      fM.materials[i.split('/').pop().split('.').shift()] = new THREE.MeshFaceMaterial(materialses[i]).makeFlat();
-    }
-    
-    var keep = f3D(THREE.Object3D, {}, [
+    var keep = f3D(THREE.Group, {}, [
       fM('Keep_Tower'          , {}),
       fM('Keep_Tower_Supports' , {}),
       fM('Keep_Wall'           , {position: [ 0, -3, 0]}),
@@ -600,7 +528,7 @@ castleMap.load = function() {
           select: fM4({tz: 3.9, sx: 2, sy: 2}),
         }, [
           fM('Fortress_Tower_Base_1'          , {position: [0  ,  0  , 0  ]}),
-          fM('Fortress_Tower_E'               , {position: [0  ,  0  , 4.2]}),
+          fM('Fortress_Tower_W'               , {position: [0  ,  0  , 4.2], scale: [-1, 1, 1]}),
           gates.towerWest.lowerDoor = fM('Fortress_Tower_Lower_Drawbridge', {
             matrix      : fM4({tx: -0.5, ty: -1.5, tz: 4.4, rx: Math.PI*17/24}),
             matrixOpen  : fM4({tx: -0.5, ty: -1.5, tz: 4.4, rx: Math.PI*17/24}),
@@ -666,7 +594,7 @@ castleMap.load = function() {
         
         f3D(keep.clone(), {position: [-21.5, 32.5, 0]}),
         fM('Fortress_Bridge'                , {position: [-14.75, 30.5, 4.2]}),
-        fM('Fortress_Bridge_Wall_Mirrored_2', {position: [-14.75, 30.5, 0  ]}),
+        fM('Fortress_Bridge_Wall_2'         , {position: [-14.75, 30.5, 0  ], scale: [1, -1, 1]}),
         fM('Keep_Wall_Battlement'           , {position: [-23.5 , 35.5, 0  ], euler: [0, 0, Math.PI]}),
         fM('Keep_Wall_Battlement'           , {position: [-18.5 , 34.5, 0  ], euler: [0, 0, 0.5*Math.PI]}),
         
@@ -720,10 +648,10 @@ castleMap.load = function() {
           matrix: fM4({tx: 22.5, ty: 6.5}),
           select: fM4({ty: 4, tz: -0.2, sx: 2, sy: 3.5}),
         }, [
-          gates.seawall2.door = fM('Harbor_Gate_Mirrored', {
-            matrix      : fM4({}),
-            matrixOpen  : fM4({ty: -5}),
-            matrixClosed: fM4({}),
+          gates.seawall2.door = fM('Harbor_Gate', {
+            matrix      : fM4({sy: -1}),
+            matrixOpen  : fM4({ty: -5, sy: -1}),
+            matrixClosed: fM4({sy: -1}),
           }),
         ]),
         
@@ -738,11 +666,7 @@ castleMap.load = function() {
           }),
         ]),
         
-        
-        //fM('Harbor_Gate_Mirrored', {position: [22.5,   6.5, 0  ]}),
-        //fM('Harbor_Gate'         , {position: [22.5,  21.5, 0  ]}),
-        
-        fM('Harbor_Tower_N'      , {position: [22.5,  24.5, 0  ]}),
+        fM('Harbor_Tower_S'      , {position: [22.5, 24.5, 0], scale: [1, -1, 1]}),
         
         f3D(harborKeep.clone(), {position: [24.5, 32.5, 0]}),
         fM('Fortress_Bridge'                 , {position: [ 0.75, 30.5, 4.2], euler: [0, 0, Math.PI]}),
@@ -755,7 +679,7 @@ castleMap.load = function() {
     ); // castleMap.castle
     
     castleMap.emit('loaded');
-  }); // Loader.loadAll();
+  }); // loader.load();
   
   castleMap.emit('loading');
 } // castleMap.load
