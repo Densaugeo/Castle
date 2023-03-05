@@ -11,40 +11,56 @@ import * as THREE from './three.module.js'
 export function forgeObject3D(type, properties, children) {
   var o3D = typeof type === 'function' ? new type() : type;
   
-  if(properties.position instanceof Array) {
-    o3D.position.fromArray(properties.position);
+  if(properties.position) {
+    switch(properties.position.constructor) {
+      case Array        : o3D.position.fromArray(properties.position); break;
+      case THREE.Vector3: o3D.position.copy     (properties.position); break;
+      default: throw Error('properties.position must be an Array or THREE.Vector3');
+    }
+    
     delete properties.position;
   }
   
-  if(properties.euler instanceof Array) {
-    properties.euler = new THREE.Euler().fromArray(properties.euler);
+  if(properties.euler) {
+    switch(properties.euler.constructor) {
+      case Array:
+        const euler = new THREE.Euler().fromArray(properties.euler);
+        o3D.quaternion.setFromEuler(euler);
+        break;
+      case THREE.Euler: o3D.quaternion.setFromEuler(properties.euler); break;
+      default: throw Error('properties.euler must be an Array or THREE.Euler');
+    }
+    
+    delete properties.euler;
   }
   
-  if(properties.scale instanceof Array) {
-    o3D.scale.fromArray(properties.scale);
+  if(properties.quaternion) {
+    switch(properties.quaternion.constructor) {
+      case Array           : o3D.quaternion.fromArray(properties.quaternion); break;
+      case THREE.Quaternion: o3D.quaternion.copy     (properties.quaternion); break;
+      default: throw Error('properties.quaternion must be an Array or THREE.Quaternion');
+    }
+    
+    delete properties.quaternion;
+  }
+  
+  if(properties.scale) {
+    switch(properties.scale.constructor) {
+      case Array        : o3D.scale.fromArray(properties.scale); break;
+      case THREE.Vector3: o3D.scale.copy     (properties.scale); break;
+      default: throw Error('properties.scale must be an Array or THREE.Vector3');
+    }
+    
     delete properties.scale;
+  }
+  
+  if(properties.matrix) {
+    o3D.matrixAutoUpdate = false;
   }
   
   for(var i in properties) {
     o3D[i] = properties[i];
   }
-  
-  o3D.matrixAutoUpdate = false;
-  
-  if(properties.matrix instanceof THREE.Matrix4) {
-    o3D.matrix = properties.matrix;
-  }
-  else {
-    if(properties.euler && properties.quaternion == null) {
-      properties.quaternion = new THREE.Quaternion().setFromEuler(properties.euler);
-    }
-    
-    // Since o3D's relevant properties are already overwritten from the properties argument, they can be used on their own
-    // TODO Looks like Three already does this when an object is added to scene?
-    o3D.matrix.compose(o3D.position, properties.quaternion || o3D.quaternion, o3D.scale);
-  }
-  
-  o3D.matrixWorldNeedsUpdate = true;
   
   if(children) {
     for(var i = 0, endi = children.length; i < endi; ++i) {
@@ -154,6 +170,19 @@ MeshMaker.prototype.make = function(args) {
   }
   
   return mesh;
+}
+
+THREE.Vector3.prototype.rotateZ90 = function(count) {
+  let previous_x
+  
+  for(let i = 0; i < count % 4; ++i) {
+    previous_x = this.x
+    
+    this.x = -this.y
+    this.y = previous_x
+  }
+  
+  return this
 }
 
 // THREE.Matrix4 manipulators. Most of these used to be in THREE, but were removed

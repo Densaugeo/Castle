@@ -189,19 +189,33 @@ castleMap.load = function() {
     var keep = f3D(THREE.Group, {}, [
       fM('Keep_Tower'          , {}),
       fM('Keep_Tower_Supports' , {}),
-      fM('Keep_Wall'           , {position: [ 0, -3, 0]}),
+      /*fM('Keep_Wall'           , {position: [ 0, -3, 0]}),
       fM('Keep_Wall'           , {position: [ 3,  0, 0], euler: [0, 0, 0.5*Math.PI]}),
       fM('Keep_Wall'           , {position: [ 0,  3, 0], euler: [0, 0,     Math.PI]}),
       fM('Keep_Wall'           , {position: [-3,  0, 0], euler: [0, 0, 1.5*Math.PI]}),
       fM('Keep_Corner'         , {position: [-3, -3, 0]}),
       fM('Keep_Corner'         , {position: [ 3, -3, 0], euler: [0, 0, 0.5*Math.PI]}),
       fM('Keep_Corner'         , {position: [ 3,  3, 0], euler: [0, 0,     Math.PI]}),
-      fM('Keep_Corner'         , {position: [-3,  3, 0], euler: [0, 0, 1.5*Math.PI]}),
+      fM('Keep_Corner'         , {position: [-3,  3, 0], euler: [0, 0, 1.5*Math.PI]}),*/
       fM('Keep_Wall_Battlement', {position: [ 2, -3, 0]}),
       fM('Keep_Wall_Battlement', {position: [ 2,  3, 0], euler: [0, 0,     Math.PI]}),
       fM('Keep_Wall_Battlement', {position: [-3,  2, 0], euler: [0, 0, 1.5*Math.PI]}),
       fM('Keep_Wall_Battlement', {position: [-3, -2, 0], euler: [0, 0, 1.5*Math.PI]}),
     ]);
+    for(let i = 0; i < 4; ++i) {
+      const meshes = []
+      
+      meshes.push(fM('Keep_Wall'      , { position: [ 0, -3, 0] }))
+      meshes.push(fM('Keep_Corner'    , { position: [-3, -3, 0] }))
+      //meshes.push(fM('Keep_Wall_Battlement', { position: [-2, -3, 0] }))
+      //meshes.push(fM('Keep_Wall_Battlement', { position: [ 2, -3, 0] }))
+      
+      for(let mesh of meshes) {
+        mesh.position.rotateZ90(i)
+        mesh.quaternion.setFromEuler(new THREE.Euler(0, 0, 0.5*Math.PI*i))
+        keep.add(mesh)
+      }
+    }
     
     var harborKeep = f3D(THREE.Object3D, {}, [
       fM('Keep_Tower'            , {position: [-8, 0, 0]}),
@@ -236,22 +250,22 @@ castleMap.load = function() {
     var gildedKeep = f3D(THREE.Object3D, {}, [
       fM('Keep_Tower'            , {}),
       fM('Keep_Tower_Supports'   , {}),
-      fM('Gilded_Keep_Wall'      , {position: [ 0, -3, 0]}),
-      fM('Gilded_Keep_Wall'      , {position: [ 3,  0, 0], euler: [0, 0, 0.5*Math.PI]}),
-      fM('Gilded_Keep_Wall'      , {position: [ 0,  3, 0], euler: [0, 0,     Math.PI]}),
-      fM('Gilded_Keep_Wall'      , {position: [-3,  0, 0], euler: [0, 0, 1.5*Math.PI]}),
-      fM('Gilded_Keep_Corner'    , {position: [-3, -3, 0]}),
-      fM('Gilded_Keep_Corner'    , {position: [ 3, -3, 0], euler: [0, 0, 0.5*Math.PI]}),
-      fM('Gilded_Keep_Corner'    , {position: [ 3,  3, 0], euler: [0, 0,     Math.PI]}),
-      fM('Gilded_Keep_Corner'    , {position: [-3,  3, 0], euler: [0, 0, 1.5*Math.PI]}),
-      fM('Gilded_Keep_Battlement', {position: [-2, -3, 0]}),
-      fM('Gilded_Keep_Battlement', {position: [ 2, -3, 0]}),
-      fM('Gilded_Keep_Battlement', {position: [ 3, -2, 0], euler: [0, 0, 0.5*Math.PI]}),
-      fM('Gilded_Keep_Battlement', {position: [ 3,  2, 0], euler: [0, 0, 0.5*Math.PI]}),
-      fM('Gilded_Keep_Battlement', {position: [-2,  3, 0], euler: [0, 0,     Math.PI]}),
-      fM('Gilded_Keep_Battlement', {position: [-3, -2, 0], euler: [0, 0, 1.5*Math.PI]}),
     ]);
-    
+    for(let i = 0; i < 4; ++i) {
+      const meshes = []
+      
+                meshes.push(fM('Gilded_Keep_Wall'      , { position: [ 0, -3, 0] }))
+                meshes.push(fM('Gilded_Keep_Corner'    , { position: [-3, -3, 0] }))
+      if(i < 2) meshes.push(fM('Gilded_Keep_Battlement', { position: [-2, -3, 0] }))
+                meshes.push(fM('Gilded_Keep_Battlement', { position: [ 2, -3, 0] }))
+      
+      for(let mesh of meshes) {
+        mesh.position.rotateZ90(i)
+        mesh.quaternion.setFromEuler(new THREE.Euler(0, 0, 0.5*Math.PI*i))
+        gildedKeep.add(mesh)
+      }
+    }
+  
     castleMap.castle.add(
       castleMap.ground = fM('Ground', {}),
       castleMap.fortress = f3D(THREE.Object3D, {}, [
