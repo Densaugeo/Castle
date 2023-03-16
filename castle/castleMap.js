@@ -177,7 +177,7 @@ gates.seawall3     = new Gate({name: 'Seawall'});
 // @event loading {} -- Requests for models have been sent to server
 // @event loaded {} -- Models have finished loading; scene is available in .castle
 castleMap.load = function() {
-  loader.load('models/castle-pruned.glb', function(gltf) {
+  loader.load('models/castle.glb', function(gltf) {
     // Stock the O3D/Mesh forge
     gltf.scene.children.forEach(v => {
       fM.meshes[v.name] = v;
@@ -467,9 +467,9 @@ castleMap.load = function() {
         fM('Citadel_Side'     , {euler: [0, 0,     Math.PI]}),
         fM('Citadel_Side'     , {euler: [0, 0, 1.5*Math.PI]}),
         fM('Citadel_Mezzanine', {}),
-        fM('Citadel_Mezzanine', {euler: [0, 0, 0.5*Math.PI]}),
-        fM('Citadel_Mezzanine', {euler: [0, 0,     Math.PI]}),
-        fM('Citadel_Mezzanine', {euler: [0, 0, 1.5*Math.PI]}),
+        fM('Citadel_Mezzanine', {scale: [ 1, -1, 1]}),
+        fM('Citadel_Mezzanine', {scale: [-1, -1, 1]}),
+        fM('Citadel_Mezzanine', {scale: [-1,  1, 1]}),
         
         f3D(gates.citadelOuter, {
           matrix: fM4({ty: -8}),
