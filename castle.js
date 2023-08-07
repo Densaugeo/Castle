@@ -27,7 +27,13 @@ export const objectPanel = new CastleModules.ObjectPanel();
 export const picker = new THREE_Densaugeo.Picker();
 
 if(HTMLElement.prototype.requestFullscreen == null) {
-  HTMLElement.prototype.requestFullscreen = HTMLElement.prototype.msRequestFullscreen || HTMLElement.prototype.mozRequestFullScreen || HTMLElement.prototype.webkitRequestFullscreen;
+  HTMLElement.prototype.requestFullscreen = HTMLElement.prototype.msRequestFullscreen || HTMLElement.prototype.mozRequestFullScreen || HTMLElement.prototype.webkitRequestFullscreen || (() => {
+    let message = 'Sorry, your browser does not allow fullscreen mode.'
+    
+    if(navigator.userAgent.includes('iPhone')) message += '\n\nYou appear to be using an iPhone. Apple does allow fullscreen on iPads, but not on iPhones.'
+    
+    alert(message)
+  })
 }
 if(document.exitFullscreen == null) {
   document.exitFullscreen = document.msExitFullscreen || document.mozCancelFullScreen || document.webkitExitFullscreen;

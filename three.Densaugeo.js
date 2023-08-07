@@ -448,14 +448,18 @@ export function FreeControls(camera, domElement, options) {
   var TouchHandler = function(e) {
     e.preventDefault(); // Should be called at least on every touchmove event
     
-    translateX += (e.touches[0].clientX - touchZeroPrevious.clientX)*self.panTouchSpeed;
-    translateY -= (e.touches[0].clientY - touchZeroPrevious.clientY)*self.panTouchSpeed;
+    if(touchZeroPrevious) {
+      translateX += (e.touches[0].clientX - touchZeroPrevious.clientX)*self.  panTouchSpeed;
+      translateY -= (e.touches[0].clientY - touchZeroPrevious.clientY)*self.  panTouchSpeed;
+    }
     
     touchZeroPrevious = e.touches[0];
     
     if(e.touches.length === 2) {
-      rotateX       -= (e.touches[1].clientY - touchOnePrevious.clientY)*self.rotatationTouchSpeed;
-      rotateGlobalZ -= (e.touches[1].clientX - touchOnePrevious.clientX)*self.rotatationTouchSpeed;
+      if(touchOnePrevious) {
+        rotateX       -= (e.touches[1].clientY - touchOnePrevious.clientY)*self.rotatationTouchSpeed;
+        rotateGlobalZ -= (e.touches[1].clientX - touchOnePrevious.clientX)*self.rotatationTouchSpeed;
+      }
       
       touchOnePrevious = e.touches[1];
     }
@@ -464,7 +468,9 @@ export function FreeControls(camera, domElement, options) {
   var touchThrottleHandler = function(e) {
     e.preventDefault(); // Should be called at least on every touchmove event
     
-    touchThrottle = (e.touches[0].clientY - throttleZero)*self.touchThrottleSpeed;
+    if(throttleZero) {
+      touchThrottle = (e.touches[0].clientY - throttleZero)*self.touchThrottleSpeed;
+    }
     
     if(e.touches.length === 2) {
       translateX += (e.touches[1].clientX - touchOnePrevious.clientX)*self.panTouchSpeed;
@@ -473,6 +479,18 @@ export function FreeControls(camera, domElement, options) {
       touchOnePrevious = e.touches[1];
     }
   }
+  
+  screen.orientation.addEventListener('change', () => {
+    touchZeroPrevious = null
+    touchOnePrevious = null
+    throttleZero = null
+    
+    const orientation = getOrientation()
+    camera.matrix.multiply(new THREE.Matrix4().makeRotationZ(
+      Math.PI/180*(orientationPrevious - orientation)
+    ))
+    orientationPrevious = orientation
+  })
   
   var rotationRateConversion = 0.000017453292519943296;
   
@@ -484,7 +502,7 @@ export function FreeControls(camera, domElement, options) {
   
   var accelHandler = function(e) {
     if(accelActive) {
-      var orientation = screen.orientation && screen.orientation.angle || window.orientation;
+      var orientation = getOrientation()
       
       // Constant = Math.PI/180/1000
       if(orientation === 0) {
@@ -499,6 +517,12 @@ export function FreeControls(camera, domElement, options) {
       }
       rotationRateRoll  = e.rotationRate.gamma*rotationRateConversion*self.rotationAccelSpeed;
     }
+  }
+  
+  var getOrientation = () => {
+    let orientation = screen.orientation.angle
+    if(navigator.userAgent.includes('iPhone')) orientation = 360 - orientation
+    return orientation % 360
   }
   
   // Attach devicemotion listener on startup because attaching it during a touchstart event is horribly buggy in FF. Except on iPhone, then permission has to be requested (which is also inconsistent)
@@ -526,6 +550,7 @@ export function FreeControls(camera, domElement, options) {
   
   var touchZeroPrevious;
   var touchOnePrevious;
+  var orientationPrevious = getOrientation();
   var throttleZero, touchThrottle = 0;
   var rotationRatePitch = 0, rotationRateYaw = 0, rotationRateRoll = 0, accelActive = false;
   
