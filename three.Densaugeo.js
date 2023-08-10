@@ -1,7 +1,7 @@
 /**
  * Dependencies: THREE.js
  */
-import * as THREE from './three.module.js'
+import * as THREE from 'three'
 
 // Chainable builder for THREE.Object3D stuff
 // Forces matrix use, because THREE.js .position and similar properties are flaky

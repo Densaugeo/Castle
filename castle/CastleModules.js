@@ -4,7 +4,7 @@
  * 
  * @description Modules for my cloud castle
  */
-import * as THREE from '../three.module.js'
+import * as THREE from 'three'
 import * as THREE_Densaugeo from '../three.Densaugeo.js';
 
 /**

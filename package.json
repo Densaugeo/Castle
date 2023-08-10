@@ -34,7 +34,8 @@
   },
   "scripts": {},
   "config": {},
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    "three": "0.149.0"
+  },
   "engines": {}
 }

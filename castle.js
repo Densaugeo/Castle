@@ -1,5 +1,5 @@
-import * as THREE from './three.module.js';
-export * as THREE from './three.module.js';
+import * as THREE from 'three';
+export * as THREE from 'three';
 import * as THREE_Densaugeo from './three.Densaugeo.js';
 export * as THREE_Densaugeo from './three.Densaugeo.js';
 import * as castleMap from './castle/castleMap.js';
