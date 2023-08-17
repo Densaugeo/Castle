@@ -35,7 +35,7 @@
   "scripts": {},
   "config": {},
   "dependencies": {
-    "three": "0.149.0"
+    "three": "0.155.0"
   },
   "engines": {}
 }

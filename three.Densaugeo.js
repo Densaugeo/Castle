@@ -1074,6 +1074,7 @@ export class PositionMaterial extends THREE.ShaderMaterial {
     
     this.vertexShader   = THREE.ShaderLib.densPosition.vertexShader;
     this.fragmentShader = THREE.ShaderLib.densPosition.fragmentShader;
+
     this.local = 0;
     this.alpha = 1;
     this.fadeDistance = new THREE.Vector3(64, 64, 64);

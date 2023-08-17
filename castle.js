@@ -120,6 +120,8 @@ picker.on('select', objectPanel.selectHandler);
 // THREE setup //
 /////////////////
 
+THREE.ColorManagement.enabled = false
+
 export const f3D = THREE_Densaugeo.forgeObject3D
 
 export const scene = new THREE.Scene()
@@ -132,18 +134,23 @@ camera.matrix.compose(
   new THREE.Vector3(1, 1, 1)
 )
 
-export const ambient_light = f3D(THREE.AmbientLight, { color: new THREE.Color(0x666666) })
+export const ambient_light = f3D(THREE.AmbientLight, {
+  color: new THREE.Color(0x666666),
+  intensity: 3.14159,
+})
 scene.add(ambient_light);
 
 export const directional_light = f3D(THREE.DirectionalLight, {
   color: new THREE.Color(0x666666),
   position: [-7.1, 2.75, 10],
+  intensity: 3.14159,
 })
 scene.add(directional_light);
 
 export const renderer = new THREE.WebGLRenderer( { antialias: true } );
 renderer.setSize( window.innerWidth - 48, window.innerHeight );
 renderer.setClearColor(0xC0C0C0, 1);
+renderer.outputColorSpace = THREE.LinearSRGBColorSpace
 
 document.body.appendChild( renderer.domElement );
 
