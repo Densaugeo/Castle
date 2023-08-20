@@ -35,7 +35,8 @@
   "scripts": {},
   "config": {},
   "dependencies": {
-    "three": "0.155.0"
+    "three": "0.155.0",
+    "font-awesome": "4.7.0"
   },
   "engines": {}
 }
