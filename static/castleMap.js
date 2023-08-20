@@ -8,8 +8,8 @@
  * @example castleMap.load(callback);
  */
 import * as THREE from 'three'
-import * as THREE_Densaugeo from '../three.Densaugeo.js'
-import {GLTFLoader} from '../three.GLTFLoader.js';
+import * as THREE_Densaugeo from '/three.Densaugeo.js'
+import {GLTFLoader} from '/three/loaders/GLTFLoader.js';
 
 const f3D = THREE_Densaugeo.forgeObject3D;
 const fM  = THREE_Densaugeo.forgeMesh;
@@ -177,7 +177,7 @@ gates.seawall3     = new Gate({name: 'Seawall'});
 // @event loading {} -- Requests for models have been sent to server
 // @event loaded {} -- Models have finished loading; scene is available in .castle
 castleMap.load = function() {
-  loader.load('models/castle.glb', function(gltf) {
+  loader.load('castle.glb', function(gltf) {
     // Stock the O3D/Mesh forge
     gltf.scene.children.forEach(v => {
       fM.meshes[v.name] = v;

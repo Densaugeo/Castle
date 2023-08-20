@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 export * as THREE from 'three';
-import * as THREE_Densaugeo from './three.Densaugeo.js';
-export * as THREE_Densaugeo from './three.Densaugeo.js';
-import * as castleMap from './castle/castleMap.js';
-export * as castleMap from './castle/castleMap.js';
-import * as CastleModules from './castle/CastleModules.js';
-export * as CastleModules from './castle/CastleModules.js';
+import * as THREE_Densaugeo from '/three.Densaugeo.js';
+export * as THREE_Densaugeo from '/three.Densaugeo.js';
+import * as castleMap from './castleMap.js';
+export * as castleMap from './castleMap.js';
+import * as CastleModules from './CastleModules.js';
+export * as CastleModules from './CastleModules.js';
 
 ////////
 // UI //
