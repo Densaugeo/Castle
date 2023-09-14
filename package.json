@@ -1,6 +1,6 @@
 {
   "name": "castle",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "WebGL castle",
   "keywords": [],
   "homepage": "https://github.com/Densaugeo/Castle",
@@ -12,7 +12,7 @@
     "static",
     "LICENSE",
     "package.json",
-    "README.md",
+    "README.md"
   ],
   "main": "",
   "repository": {
