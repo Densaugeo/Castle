@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 export * as THREE from 'three';
-import * as THREE_Densaugeo from '/three.Densaugeo.js';
-export * as THREE_Densaugeo from '/three.Densaugeo.js';
+import * as THREE_Densaugeo from './three.Densaugeo.js';
+export * as THREE_Densaugeo from './three.Densaugeo.js';
 import * as castleMap from './castleMap.js';
 export * as castleMap from './castleMap.js';
 import * as CastleModules from './CastleModules.js';
@@ -12,11 +12,9 @@ export * as CastleModules from './CastleModules.js';
 ////////
 
 export const sidebar = new PanelUI.Sidebar();
-sidebar.addButton({buttonName: 'land', faClass: 'fa-university', title: 'Landing page'});
 sidebar.addButton({buttonName: 'help', faClass: 'fa-question', title: 'Help'});
 sidebar.addButton({buttonName: 'shader', faClass: 'fa-eye', title: 'Change shader'});
 sidebar.addButton({buttonName: 'fs', faClass: 'fa-arrows-alt', title: 'Fullscreen'});
-sidebar.addButton({buttonName: 'contrast', faClass: 'fa-adjust', title: 'Flip Contrast'});
 sidebar.addButton({buttonName: 'clear', faClass: 'fa-recycle', title: 'Clear local storage'});
 sidebar.addButton({buttonName: 'shader_settings', faClass: 'fa-cog', title: 'Adjust shader settings'});
 
@@ -42,18 +40,6 @@ export const getFullscreenElement = function() {
   return document.fullscreenElement || document.msFullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement;
 }
 
-export const darkColors = document.getElementById('dark_colors');
-export const head = darkColors.parentNode;
-export let contrastFlipped = false;
-
-if(localStorage.contrast === 'light') {
-  head.removeChild(darkColors);
-}
-
-sidebar.on('land', function(e) {
-  document.location.href = document.location.origin + '/index.html';
-});
-
 sidebar.on('help', function(e) {
   if(helpPanel.isOpen()) {
     helpPanel.close();
@@ -73,16 +59,6 @@ sidebar.on('fs', function(e) {
     document.body.requestFullscreen();
   } else {
     document.exitFullscreen();
-  }
-});
-
-sidebar.on('contrast', function(e) {
-  if(contrastFlipped = !contrastFlipped) {
-    head.removeChild(darkColors);
-    localStorage.contrast = 'light';
-  } else {
-    head.appendChild(darkColors);
-    localStorage.contrast = 'dark';
   }
 });
 

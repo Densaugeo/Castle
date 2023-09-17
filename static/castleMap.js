@@ -8,8 +8,8 @@
  * @example castleMap.load(callback);
  */
 import * as THREE from 'three'
-import * as THREE_Densaugeo from '/three.Densaugeo.js'
-import {GLTFLoader} from '/three/loaders/GLTFLoader.js';
+import * as THREE_Densaugeo from './three.Densaugeo.js'
+import {GLTFLoader} from './three/loaders/GLTFLoader.js';
 
 const f3D = THREE_Densaugeo.forgeObject3D;
 const fM  = THREE_Densaugeo.forgeMesh;

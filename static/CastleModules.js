@@ -5,7 +5,7 @@
  * @description Modules for my cloud castle
  */
 import * as THREE from 'three'
-import * as THREE_Densaugeo from '/three.Densaugeo.js';
+import * as THREE_Densaugeo from './three.Densaugeo.js';
 
 /**
  * @module CastleModules.HelpPanel inherits PanelUI.Panel

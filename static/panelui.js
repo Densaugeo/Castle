@@ -1,6 +1,5 @@
 /**
  * @depends EventEmitter.js
- * @depends Draggabilliy.js
  */
 
 var PanelUI = {};
@@ -89,7 +88,7 @@ PanelUI.Sidebar.prototype.constructor = PanelUI.Sidebar;
 
 /**
  * @module PanelUI.Panel inherits EventEmitter
- * @description Makes a panel. Includes draggability and close button
+ * @description Makes a panel. Includes close button
  * 
  * @example var panel = new PanelUI.Panel({id: 'css_id', heading: 'Your heading here', closeButton: true, accessKey: 'a'});
  * @example panel.open();
@@ -124,14 +123,6 @@ PanelUI.Panel = function Panel(options) {
     this.keyCuts[81] = this.closeButton; // Q is for quit
   }
   
-  // @prop Draggabilly draggie -- Attachment of Draggabilly library for drag-and-drop positioning
-  this.draggie = new Draggabilly(this.domElement, {handle: '.panel_heading'});
-  
-  if(localStorage['dragger_' + this.domElement.id + '_top']) {
-    this.domElement.style.top  = localStorage['dragger_' + this.domElement.id + '_top' ];
-    this.domElement.style.left = localStorage['dragger_' + this.domElement.id + '_left'];
-  }
-  
   with(this) domElement.addEventListener('keydown', function(e) {
     if(!e.altKey && !e.ctrlKey && !e.shiftKey && keyCuts[e.keyCode]) {
       e.stopPropagation();
@@ -145,11 +136,6 @@ PanelUI.Panel = function Panel(options) {
       self.close();
     });
   }
-  
-  with(this) draggie.on('dragEnd', function() {
-    localStorage['dragger_' + domElement.id + '_top' ] = domElement.style.top ;
-    localStorage['dragger_' + domElement.id + '_left'] = domElement.style.left;
-  });
 }
 PanelUI.Panel.prototype = Object.create(EventEmitter.prototype);
 PanelUI.Panel.prototype.constructor = PanelUI.Panel;

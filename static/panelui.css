@@ -1,15 +1,9 @@
 body {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 14px;
+  font-size: 16px;
+  color: #DDD;
   line-height: 1.42857143;
-}
-#background {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 48px;
-  right: 0;
-  z-index: -1;
+  background: #000;
 }
 #sidebar {
   position: fixed;
@@ -33,9 +27,6 @@ body {
 .panel:focus {
   z-index: 3;
 }
-.panel.is-dragging {
-  z-index: 4;
-}
 .panel_heading {
   min-height: 24px;
   margin-bottom: 6px;
@@ -54,9 +45,4 @@ body {
   margin: 6px;
   font-size: 24px;
   text-align: center;
-}
-
-.well {
-  padding: 0 19px;
-  border-radius: 4px;
 }
