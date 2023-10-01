@@ -6,6 +6,8 @@ import * as castleMap from './castleMap.js';
 export * as castleMap from './castleMap.js';
 import * as CastleModules from './CastleModules.js';
 export * as CastleModules from './CastleModules.js';
+import * as PanelUI from './panelui.js'
+export * as PanelUI from './panelui.js'
 
 ////////
 // UI //
@@ -102,7 +104,7 @@ export const f3D = THREE_Densaugeo.forgeObject3D
 
 export const scene = new THREE.Scene()
 
-export const camera = new THREE.PerspectiveCamera( 45, (window.innerWidth - 48) / window.innerHeight, 1, 1000 )
+export const camera = new THREE.PerspectiveCamera( 45, 300 / 200, 1, 1000 )
 
 camera.matrix.compose(
   new THREE.Vector3(28.423, -49.239, 27.351),
@@ -124,21 +126,11 @@ export const directional_light = f3D(THREE.DirectionalLight, {
 scene.add(directional_light);
 
 export const renderer = new THREE.WebGLRenderer( { antialias: true } );
-renderer.setSize( window.innerWidth - 48, window.innerHeight );
+renderer.setSize(300, 200);
 renderer.setClearColor(0xC0C0C0, 1);
 renderer.outputColorSpace = THREE.LinearSRGBColorSpace
 
-document.body.appendChild( renderer.domElement );
-
 export const controls = new THREE_Densaugeo.FreeControls(camera, renderer.domElement, {panMouseSpeed: 0.05, dollySpeed: 5});
-
-// WebGL occupies entire browser window
-window.addEventListener('resize', function() {
-  camera.aspect = (window.innerWidth - 48)/window.innerHeight
-  camera.updateProjectionMatrix()
-  
-  renderer.setSize(window.innerWidth - 48, window.innerHeight)
-})
 
 // Put stuff in scene
 scene.add(castleMap.castleMap.castle);
@@ -173,3 +165,123 @@ requestAnimationFrame(time => {
 // Startup scripts //
 
 eval(localStorage.onstart);
+
+/////////////////////////
+// Web component trial //
+/////////////////////////
+
+const lego_castle_style = new CSSStyleSheet()
+lego_castle_style.replaceSync(`
+:host {
+  /* Using an inline display style is required for the custom element in the
+  external DOM to have the correct size */
+  display: inline-grid;
+  
+  /* Width and height controlled by JS */
+  
+  /* Do not use "fr" units. They cause issues when a cell's contents are larger
+  than the cell */
+  grid-template-rows: 100%;
+  grid-template-columns: 48px 300px calc(100% - 348px);
+}
+
+input {
+  color: #0ff;
+}
+
+.button.active_shader {
+  color: #00F;
+}
+
+canvas {
+  grid-row: 1;
+  grid-column: 2 / 3;
+}
+
+#panel-container {
+  grid-row: 1;
+  grid-column: 2;
+  z-index: 1;
+  visibility: hidden;
+}
+`)
+
+class LegoCastle extends HTMLElement {
+  constructor() {
+    super()
+    
+    const shadow = this.attachShadow({ mode: 'closed' })
+    this.shadow = shadow
+    shadow.innerHTML = `
+    <link rel="stylesheet" href="${new URL('font-awesome/css/font-awesome.min.css', import.meta.url).href}">
+    
+    <!-- panelui.css must be imported after font-awesome, or icons sizes will
+         be messed up -->
+    <link rel="stylesheet" href="${new URL('panelui.css', import.meta.url).href}">
+    
+    <div id="panel-container"></div>
+    `
+    shadow.adoptedStyleSheets = [lego_castle_style]
+    
+    // Font Awesome must be linked to the external document as well, because it
+    // uses custom fonts and those cannot be loaded from within web components
+    document.head.fE('link', {
+      rel: 'stylesheet',
+      href: new URL('font-awesome/css/font-awesome.min.css', import.meta.url).href,
+    })
+    
+    shadow.appendChild(sidebar.domElement)
+    shadow.appendChild(renderer.domElement)
+    helpPanel.container = shadow.getElementById('panel-container')
+    shaderChanger.container = shadow.getElementById('panel-container')
+    shaderPanel.container = shadow.getElementById('panel-container')
+    objectPanel.container = shadow.getElementById('panel-container')
+    picker.container = shadow.getElementById('panel-container')
+    
+    if(this.width == null) this.width = 348
+    if(this.height == null) this.height = 200
+    
+    // Custom attributes set in HTML must be explicitly applied at construction
+    for(let attribute of this.constructor.observedAttributes) {
+      this.attributeChangedCallback(attribute, null, this.getAttribute(attribute))
+    }
+  }
+  
+  get width( ) { return this.getAttribute('width'   ) }
+  set width(v) { return this.setAttribute('width', v) }
+  
+  get height( ) { return this.getAttribute('height'   ) }
+  set height(v) { return this.setAttribute('height', v) }
+  
+  static get observedAttributes() {
+    return ['width', 'height']
+  }
+  
+  /**
+   * @param {string} name 
+   * @param {string} old_value 
+   * @param {string} new_value 
+   */
+  
+  attributeChangedCallback(name, old_value, new_value) {
+    const v = parseInt(new_value)
+    
+    switch(name) {
+      case 'width':
+        camera.aspect = (v - 48)/renderer.domElement.height
+        renderer.setSize(v - 48, renderer.domElement.height)
+        
+        this.style.width = v + 'px'
+        break
+      case 'height':
+        camera.aspect = renderer.domElement.width/v
+        renderer.setSize(renderer.domElement.width, v)
+        
+        this.style.height = v + 'px'
+        break
+    }
+    
+    camera.updateProjectionMatrix()
+  }
+}
+customElements.define('lego-castle', LegoCastle)

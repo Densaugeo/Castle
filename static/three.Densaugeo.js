@@ -904,7 +904,7 @@ export class WaterMaterial extends THREE.ShaderMaterial {
     this.specular = new THREE.Color(0x193366);
     
     this.uniforms = THREE.UniformsUtils.clone(THREE.ShaderLib.densWater.uniforms);
-    this.uniforms.normalSampler.value = new THREE.TextureLoader().load('waternormals.jpg');
+    this.uniforms.normalSampler.value = new THREE.TextureLoader().load(new URL('waternormals.jpg', import.meta.url).href);
     this.uniforms.normalSampler.value.wrapS = this.uniforms.normalSampler.value.wrapT = THREE.RepeatWrapping;
     
     this.setValues(options);

@@ -6,6 +6,8 @@
  */
 import * as THREE from 'three'
 import * as THREE_Densaugeo from './three.Densaugeo.js';
+import * as PanelUI from './panelui.js'
+const fE = PanelUI.fE
 
 /**
  * @module CastleModules.HelpPanel inherits PanelUI.Panel

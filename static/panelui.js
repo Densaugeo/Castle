@@ -2,22 +2,50 @@
  * @depends EventEmitter.js
  */
 
-var PanelUI = {};
-
-// @method HTMLElement forgeElement(String tagName, Object properties, Array children) -- Daisy-chainable element maker
-PanelUI.forgeElement = function forgeElement(tagName, properties, children) {
-  var element = document.createElement(tagName);
-  for(var i in properties) {
-    element[i] = properties[i];
+/**
+ * Daisy-chainable HTML element maker. If an array is supplied as the second
+ * argument, it is interpreted as children instead of properties
+ * 
+ * @param {String} tagName
+ * @param {Object | Array} [properties={}]
+ * @param {Array} [children=[]]
+ * @returns {HTMLElement}
+ */
+export const fE = (tagName, properties={}, children=[]) => {
+    if(properties instanceof Array) {
+    children = properties.concat(children)
+    properties = {}
   }
-  if(children) {
-    for(var i = 0, endi = children.length; i < endi; ++i) {
-      element.appendChild(children[i]);
+  
+  const element = document.createElement(tagName)
+  
+  for(const key in properties) {
+    try {
+      element[key] = properties[key]
+    } catch {
+      // .setAttribute() is necessary for certain attributes like <input>'s
+      // list. A normal assignment is ignored in that case. This should not be
+      // done in most cases (textContent and className properties cannot be set
+      // by .setAttribute() for example)
+      if(element[key] == null) element.setAttribute(key, properties[key])
     }
   }
-  return element;
+  
+  element.append(...children)
+  return element
 }
-var fE = PanelUI.forgeElement;
+
+/**
+ * Appends result of daisy-chainable element maker fE() as child element
+ * 
+ * @param {String} tagName
+ * @param {Object | Array} [properties={}]
+ * @param {Array} [children=[]]
+ * @returns {HTMLElement}
+ */
+HTMLElement.prototype.fE = function() {
+  return this.appendChild(fE(...arguments))
+}
 
 /**
  * @module PanelUI.Sidebar inherits EventEmitter
@@ -29,7 +57,7 @@ var fE = PanelUI.forgeElement;
  * @example sidebar.on('do_stuff', function() {console.log('Doing stuff')});
  * @example sidebar.on('trigger', function(e) {console.log(e.buttonName === 'do_stuff')});
  */
-PanelUI.Sidebar = function Sidebar() {
+export const Sidebar = function Sidebar() {
   EventEmitter.call(this);
   
   // @prop HTMLElement domElement -- div tag that holds all of the Panel's HTML elements
@@ -38,7 +66,6 @@ PanelUI.Sidebar = function Sidebar() {
   // @prop HTMLCollection children -- Alias for domElement.children
   this.children = this.domElement.children;
   
-  document.body.appendChild(this.domElement);
   this.domElement.title = 'Key: ' + this.domElement.accessKeyLabel;
   
   // @prop Object keyCodesToButtonIndices -- Look up a keyCode and get a button index
@@ -50,41 +77,41 @@ PanelUI.Sidebar = function Sidebar() {
   // @method undefined addButton(Object {String faClass, String title, String buttonName}) -- Add a button. Support font-awesome icon names
   // @event trigger {String buttonName} -- Fired when a button is triggered
   // @event [buttonName] {} -- Fired when a button is triggered. Event name is the buttonName defined when the corresponding button was added
-  with(this) this.addButton = function(/*Object*/ options) {
+  this.addButton = function(/*Object*/ options) {
     options = options || {};
     
     var element = fE('i', {
       className  : 'fa ' + 'button ' + (options.faClass || ''),
       textContent: options.char || '',
-      title      : (options.title || 'Not yet described') + '\n\nKey: ' + buttonIndicesToKeyChars[children.length],
+      title      : (options.title || 'Not yet described') + '\n\nKey: ' + this.buttonIndicesToKeyChars[this.children.length],
       tabIndex   : 0,
     });
     
-    element.addEventListener('click', function(/*Event*/ e) {
-      domElement.focus();
-      emit('trigger', {buttonName: options.buttonName});
-      emit(options.buttonName);
+    element.addEventListener('click', e => {
+      this.domElement.focus();
+      this.emit('trigger', {buttonName: options.buttonName});
+      this.emit(options.buttonName);
     });
     
-    domElement.appendChild(element);
+    this.domElement.appendChild(element);
   }
   
-  with(this) document.addEventListener('keydown', function(/*Event*/ e) {
+  document.addEventListener('keydown', e => {
     if(!e.altKey && !e.ctrlKey && !e.shiftKey && e.keyCode === 13 && e.target.classList.contains('button')) {
       e.target.dispatchEvent(new MouseEvent('click'));
     }
   });
   
-  with(this) document.addEventListener('keydown', function(/*Event*/ e) {
-    var index = keyCodesToButtonIndices[e.keyCode];
+  document.addEventListener('keydown', e => {
+    var index = this.keyCodesToButtonIndices[e.keyCode];
     
-    if(!e.altKey && !e.ctrlKey && !e.shiftKey && children[index]) {
-      children[index].dispatchEvent(new MouseEvent('click'));
+    if(!e.altKey && !e.ctrlKey && !e.shiftKey && this.children[index]) {
+      this.children[index].dispatchEvent(new MouseEvent('click'));
     }
   });
 }
-PanelUI.Sidebar.prototype = Object.create(EventEmitter.prototype);
-PanelUI.Sidebar.prototype.constructor = PanelUI.Sidebar;
+Sidebar.prototype = Object.create(EventEmitter.prototype);
+Sidebar.prototype.constructor = Sidebar;
 
 /**
  * @module PanelUI.Panel inherits EventEmitter
@@ -98,10 +125,12 @@ PanelUI.Sidebar.prototype.constructor = PanelUI.Sidebar;
  * @option String  heading     -- Heading text
  * @option String  id          -- CSS ID
  */
-PanelUI.Panel = function Panel(options) {
+export const Panel = function Panel(options) {
   EventEmitter.call(this);
   
   var self = this;
+  
+  this.container = options.container ?? document.body
   
   // @prop HTMLElement domElement -- div tag that holds all of the Panel's HTML elements
   this.domElement = fE('div', {id: options.id, className: 'panel', tabIndex: 0, accessKey: options.accessKey || ''}, [
@@ -123,26 +152,26 @@ PanelUI.Panel = function Panel(options) {
     this.keyCuts[81] = this.closeButton; // Q is for quit
   }
   
-  with(this) domElement.addEventListener('keydown', function(e) {
-    if(!e.altKey && !e.ctrlKey && !e.shiftKey && keyCuts[e.keyCode]) {
+  this.domElement.addEventListener('keydown', e => {
+    if(!e.altKey && !e.ctrlKey && !e.shiftKey && this.keyCuts[e.keyCode]) {
       e.stopPropagation();
       
-      keyCuts[e.keyCode].dispatchEvent(new MouseEvent('click'));
+      this.keyCuts[e.keyCode].dispatchEvent(new MouseEvent('click'));
     }
   });
   
   if(options.closeButton != false) {
-    this.closeButton.addEventListener('click', function(/*Event*/ e) {
+    this.closeButton.addEventListener('click', e => {
       self.close();
     });
   }
 }
-PanelUI.Panel.prototype = Object.create(EventEmitter.prototype);
-PanelUI.Panel.prototype.constructor = PanelUI.Panel;
+Panel.prototype = Object.create(EventEmitter.prototype);
+Panel.prototype.constructor = Panel;
 
 // @method proto undefined open(Boolean focus) -- Adds Panel's domElement to the document. If focus is set, also focuses .domElement
-PanelUI.Panel.prototype.open = function(focus) {
-  document.body.appendChild(this.domElement);
+Panel.prototype.open = function(focus) {
+  this.container.appendChild(this.domElement);
   
   if(focus) {
     this.domElement.focus();
@@ -151,26 +180,22 @@ PanelUI.Panel.prototype.open = function(focus) {
 
 // @method proto undefined close() -- Removes Panel's domElement from the document
 // @event close {} -- Fired on panel close
-PanelUI.Panel.prototype.close = function() {
+Panel.prototype.close = function() {
   this.domElement.parentElement.removeChild(this.domElement);
   
   this.emit('close');
 }
 
 // @method proto Boolean isOpen() -- Returns whether panel is currently open (attached to document)
-PanelUI.Panel.prototype.isOpen = function() {
-  return this.domElement.parentElement === document.body;
+Panel.prototype.isOpen = function() {
+  return this.domElement.parentElement === this.container;
 }
 
-// @method proto undefined toggleOpen(Boolean focus) -- Toggle .domElement on and off of document.body
-PanelUI.Panel.prototype.toggleOpen = function(focus) {
+// @method proto undefined toggleOpen(Boolean focus) -- Toggle .domElement on and off of this.container
+Panel.prototype.toggleOpen = function(focus) {
   if(this.isOpen()) {
     this.close();
   } else {
     this.open(focus);
   }
-}
-
-if(typeof module != 'undefined' && module != null && module.exports) {
-  module.exports = PanelUI;
 }

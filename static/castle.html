@@ -7,47 +7,6 @@
 
 <title>A Castle in the Cloud</title>
 
-<link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
-<link rel="stylesheet" href="panelui_dark.css" id="dark_colors">
-<link rel="stylesheet" href="panelui.css">
-
-<style type="text/css">
-canvas {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 48px;
-  right: 0;
-  z-index: 0;
-  padding:  0;
-  border:   none;
-  margin:   0;
-}
-
-#help,
-#shader,
-#object {
-  width: 300px;
-  top: 12px;
-  left: 60px;
-}
-
-.button.active_shader {
-  color: #00F;
-}
-
-form {
-  position: absolute;
-  right: 48px;
-  z-index: 1;
-  color: #0ff;
-  white-space: pre;
-}
-input {
-  color: #0ff;
-}
-</style>
-
 <script type="importmap">
 {
   "imports": {
@@ -56,10 +15,16 @@ input {
 }
 </script>
 
+<style>
+body {
+  margin: 0;
+}
+</style>
+
 <script type="text/javascript" src="EventEmitter.min.js"></script>
-<script type="text/javascript" src="panelui.js"></script>
 </head>
 <body>
+<lego-castle></lego-castle>
 <!--
 UI fragment from quaternion-test for comparison
 
@@ -78,5 +43,15 @@ UI fragment from quaternion-test for comparison
 <script type="module">
 import * as index from './castle.js'
 for(const key in index) window[key] = index[key]
+
+window.lego_castle = document.getElementsByTagName('lego-castle')[0]
+
+// WebGL occupies entire browser window
+function resizer() {
+  lego_castle.width  = window.innerWidth
+  lego_castle.height = window.innerHeight
+}
+window.addEventListener('resize', resizer)
+resizer()
 </script>
 </html>

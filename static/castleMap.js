@@ -177,7 +177,7 @@ gates.seawall3     = new Gate({name: 'Seawall'});
 // @event loading {} -- Requests for models have been sent to server
 // @event loaded {} -- Models have finished loading; scene is available in .castle
 castleMap.load = function() {
-  loader.load('castle.glb', function(gltf) {
+  loader.load(new URL('castle.glb', import.meta.url).href, function(gltf) {
     // Stock the O3D/Mesh forge
     gltf.scene.children.forEach(v => {
       fM.meshes[v.name] = v;
