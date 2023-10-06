@@ -173,16 +173,13 @@ eval(localStorage.onstart);
 const lego_castle_style = new CSSStyleSheet()
 lego_castle_style.replaceSync(`
 :host {
-  /* Using an inline display style is required for the custom element in the
-  external DOM to have the correct size */
-  display: inline-grid;
+  /* This is required to make internal element positions relative to the web
+  component, instead of something in the external DOM */
+  position: relative;
   
-  /* Width and height controlled by JS */
-  
-  /* Do not use "fr" units. They cause issues when a cell's contents are larger
-  than the cell */
-  grid-template-rows: 100%;
-  grid-template-columns: 48px 300px calc(100% - 348px);
+  /* Using an inline-block display style is required for the custom element in
+  the external DOM to have the correct size */
+  display: inline-block;
 }
 
 input {
@@ -194,15 +191,8 @@ input {
 }
 
 canvas {
-  grid-row: 1;
-  grid-column: 2 / 3;
-}
-
-#panel-container {
-  grid-row: 1;
-  grid-column: 2;
-  z-index: 1;
-  visibility: hidden;
+  position: absolute;
+  left: 48px;
 }
 `)
 
@@ -218,8 +208,6 @@ class LegoCastle extends HTMLElement {
     <!-- panelui.css must be imported after font-awesome, or icons sizes will
          be messed up -->
     <link rel="stylesheet" href="${new URL('panelui.css', import.meta.url).href}">
-    
-    <div id="panel-container"></div>
     `
     shadow.adoptedStyleSheets = [lego_castle_style]
     
@@ -232,11 +220,11 @@ class LegoCastle extends HTMLElement {
     
     shadow.appendChild(sidebar.domElement)
     shadow.appendChild(renderer.domElement)
-    helpPanel.container = shadow.getElementById('panel-container')
-    shaderChanger.container = shadow.getElementById('panel-container')
-    shaderPanel.container = shadow.getElementById('panel-container')
-    objectPanel.container = shadow.getElementById('panel-container')
-    picker.container = shadow.getElementById('panel-container')
+    helpPanel.container = shadow
+    shaderChanger.container = shadow
+    shaderPanel.container = shadow
+    objectPanel.container = shadow
+    picker.container = shadow
     
     if(this.width == null) this.width = 348
     if(this.height == null) this.height = 200

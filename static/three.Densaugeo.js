@@ -528,7 +528,13 @@ export function FreeControls(camera, domElement, options) {
   // Attach devicemotion listener on startup because attaching it during a touchstart event is horribly buggy in FF. Except on iPhone, then permission has to be requested (which is also inconsistent)
   if(typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
     domElement.addEventListener('touchend', () => {
-      DeviceMotionEvent.requestPermission().then(() => {
+      DeviceMotionEvent.requestPermission().then((a, b, c) => {
+        if(a === 'denied') alert(
+          'Accelerometer permissions denied, touch-look disabled.' +
+          location.protocol === 'https:' ? '' :
+          '\n\nNOTE: HTTPS needed to use DeviceMotionEvent in Safari.'
+        )
+        
         window.addEventListener('devicemotion', accelHandler);
       });
     }, { 'once': true });

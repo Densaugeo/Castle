@@ -181,7 +181,7 @@ Panel.prototype.open = function(focus) {
 // @method proto undefined close() -- Removes Panel's domElement from the document
 // @event close {} -- Fired on panel close
 Panel.prototype.close = function() {
-  this.domElement.parentElement.removeChild(this.domElement);
+  this.container.removeChild(this.domElement);
   
   this.emit('close');
 }

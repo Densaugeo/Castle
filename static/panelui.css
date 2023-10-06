@@ -6,8 +6,9 @@
   background: #000;
 }
 #sidebar {
-  grid-column: 1;
-  grid-row: 1;
+  position: absolute;
+  width: 36px;
+  height: calc(100% - 12px);
   z-index: 2;
   padding: 6px;
   background: #000;
@@ -16,7 +17,10 @@
 }
 
 .panel {
-  float: bottom;
+  position: absolute;
+  left: 48px;
+  top: 0;
+  width: 300px;
   z-index: 2;
   min-height: 24px;
   max-height: calc(100% - 24px);
@@ -39,7 +43,9 @@
   text-align: center;
 }
 .panel_close {
-  float: right;
+  position: absolute;
+  right: 0;
+  top: 0;
   z-index: 1;
 }
 
