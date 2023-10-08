@@ -712,6 +712,8 @@ export function Picker(options) {
   // @prop THREE.WebGLRenderer renderer -- May be an empty object if not set
   this.renderer = {};
   
+  this.camera = {}
+  
   // @prop [THREE_Densaugeo.IntObject] intObjects -- Objects which can be picked (interacted with)
   this.intObjects = [];
   
@@ -748,7 +750,7 @@ export function Picker(options) {
     mouse.x = (e.clientX - boundingRect.left)/boundingRect.width*2 - 1;
     mouse.y = (boundingRect.top - e.clientY)/boundingRect.height*2 + 1;
     
-    raycaster.setFromCamera(mouse, camera);
+    raycaster.setFromCamera(mouse, self.camera);
     
     var intersections = raycaster.intersectObjects(self.intObjects, true);
     

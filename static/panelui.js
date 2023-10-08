@@ -188,7 +188,7 @@ Panel.prototype.close = function() {
 
 // @method proto Boolean isOpen() -- Returns whether panel is currently open (attached to document)
 Panel.prototype.isOpen = function() {
-  return this.domElement.parentElement === this.container;
+  return this.domElement.parentNode === this.container;
 }
 
 // @method proto undefined toggleOpen(Boolean focus) -- Toggle .domElement on and off of this.container
