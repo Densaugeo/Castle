@@ -91,7 +91,7 @@ export class DoubleGate extends THREE_Densaugeo.IntObject {
       
       if(typeof this.rightSpiral != 'undefined') {
         this.rightSpiral.children.forEach(function(v, i, a) {
-          v.matrix.forge({tz: 0.4*i, rz: 4/3*Math.PI - Math.PI/8*i});
+          v.rotation.z = 4/3*Math.PI - Math.PI/8*i
         });
       }
     }
@@ -102,7 +102,7 @@ export class DoubleGate extends THREE_Densaugeo.IntObject {
       
       if(typeof this.rightSpiral != 'undefined') {
         this.rightSpiral.children.forEach(function(v, i, a) {
-          v.matrix.forge({tz: 0.4*i, rz: 0});
+          v.rotation.z = 0
         });
       }
     }
@@ -113,7 +113,7 @@ export class DoubleGate extends THREE_Densaugeo.IntObject {
       
       if(typeof this.leftSpiral != 'undefined') {
         this.leftSpiral.children.forEach(function(v, i, a) {
-          v.matrix.forge({tz: 0.4*i, rz: -4/3*Math.PI + Math.PI/8*i});
+          v.rotation.z = -4/3*Math.PI + Math.PI/8*i
         });
       }
     }
@@ -124,7 +124,7 @@ export class DoubleGate extends THREE_Densaugeo.IntObject {
       
       if(typeof this.leftSpiral != 'undefined') {
         this.leftSpiral.children.forEach(function(v, i, a) {
-          v.matrix.forge({tz: 0.4*i, rz: 0});
+          v.rotation.z = 0
         });
       }
     }
