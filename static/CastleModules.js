@@ -9,85 +9,72 @@ import * as THREE_Densaugeo from './three.Densaugeo.js';
 import * as PanelUI from './panelui.js'
 const fE = PanelUI.fE
 
-/**
- * @module CastleModules.HelpPanel inherits PanelUI.Panel
- * @description Gives an overview of the UI's controls
- * 
- * @example var helpPanel = new CastleModules.HelpPanel();
- * @example helpPanel.open();
- */
-export const HelpPanel = function HelpPanel() {
-  PanelUI.Panel.call(this, {id: 'help', heading: 'Controls', startOpen: false, accessKey: 'c'});
-  
-  this.domElement.appendChild(fE('div', {}, [
-    fE('text', {textContent: 'Touchscreen:'}),
-    fE('br'),
-    fE('text', {textContent: 'First finger drag - Pan'}),
-    fE('br'),
-    fE('text', {textContent: 'Second finger drag - Rotate'}),
-    fE('br'),
-    fE('text', {textContent: 'Slide along right edge - Throttle'}),
-    fE('br'),
-    fE('br'),
-    fE('text', {textContent: 'Mouse:'}),
-    fE('br'),
-    fE('text', {textContent: 'Left click and drag - Pan'}),
-    fE('br'),
-    fE('text', {textContent: 'Right click and drag - Rotate'}),
-    fE('br'),
-    fE('text', {textContent: 'Scroll wheel - Dolly'}),
-    fE('br'),
-    fE('text', {textContent: 'Shift click - Activate mouse look'}),
-    fE('br'),
-    fE('text', {textContent: 'Esc - Exit mouse look'}),
-    fE('br'),
-    fE('br'),
-    fE('text', {textContent: 'Keyboard:'}),
-    fE('br'),
-    fE('text', {textContent: 'W/S - Fly forward/backward'}),
-    fE('br'),
-    fE('text', {textContent: 'A/D - Strafe left/right'}),
-    fE('br'),
-    fE('text', {textContent: 'E/C - Ascend/Descend'}),
-    fE('br'),
-    fE('text', {textContent: 'Arrows - Turn'}),
-    fE('br'),
-    fE('br'),
-    fE('text', {textContent: 'Gamepad (press any face button to activate):'}),
-    fE('br'),
-    fE('text', {textContent: 'Left stick - Pan'}),
-    fE('br'),
-    fE('text', {textContent: 'Right stick - Turn'}),
-    fE('br'),
-    fE('text', {textContent: 'Left/right trigger - Throttle back/forward'}),
-  ]));
+export class NoPanelJustData extends EventEmitter {
+  heading = 'Heading Goes Here'
+  content = fE('div', { textContent: 'Content goes here' } )
 }
-HelpPanel.prototype = Object.create(PanelUI.Panel.prototype);
-HelpPanel.prototype.constructor = HelpPanel;
 
-/**
- * @module CastleModules.ShaderPanel inherits PanelUI.Panel
- * @description UI panel to change shaders, and adjust shaders' uniform variables
- * 
- * @example var shaderPanel = new CastleModules.ShaderPanel();
- * @example shaderPanel.open();
- */
-export const ShaderPanel = function ShaderPanel(options) {
-  PanelUI.Panel.call(this, {id: 'shader', heading: 'Shader Settings', accessKey: 's'});
+export class HelpPanelData extends NoPanelJustData {
+  heading = 'Controls'
+  content = fE('div', [
+    'Touchscreen:',
+    fE('br'),
+    'First finger drag - Pan',
+    fE('br'),
+    'Second finger drag - Rotate',
+    fE('br'),
+    'Slide along right edge - Throttle',
+    fE('br'),
+    fE('br'),
+    'Mouse:',
+    fE('br'),
+    'Left click and drag - Pan',
+    fE('br'),
+    'Right click and drag - Rotate',
+    fE('br'),
+    'Scroll wheel - Dolly',
+    fE('br'),
+    'Shift click - Activate mouse look',
+    fE('br'),
+    'Esc - Exit mouse look',
+    fE('br'),
+    fE('br'),
+    'Keyboard:',
+    fE('br'),
+    'W/S - Fly forward/backward',
+    fE('br'),
+    'A/D - Strafe left/right',
+    fE('br'),
+    'E/C - Ascend/Descend',
+    fE('br'),
+    'Arrows - Turn',
+    fE('br'),
+    fE('br'),
+    'Gamepad (press any face button to activate):',
+    fE('br'),
+    'Left stick - Pan',
+    fE('br'),
+    'Right stick - Turn',
+    fE('br'),
+    'Left/right trigger - Throttle back/forward',
+  ])
+}
+
+export class ShaderPanelData extends NoPanelJustData {
+  heading = 'Shader Settings'
   
   // @prop Object shaderButtons -- Holds HTMLElements used for shader selection buttons
-  this.shaderButtons = {};
+  shaderButtons = {}
   
   // @prop Object controls -- Holds HTMLElements used for adjusting shaders' uniform variables
-  this.controls = {};
+  controls = {}
   
   // @prop THREE.ShaderMaterial currentShader -- Shader whose uniforms are currently displayed on ShaderPanel for editing
-  this.currentShader = {};
+  currentShader = {}
   
-  // @prop HTMLElement content -- Appened to .domElement
-  this.content = fE('div', {}, [
+  content = fE('div', [
     fE('br'),
-    fE('text', {textContent: 'Current shader:'}),
+    'Current shader:',
     fE('br'),
     this.shaderButtons.original    = fE('b', {className: 'button active_shader', title: 'Phong', textContent: 'P', tabIndex: 0}),
     this.shaderButtons.global      = fE('b', {className: 'button', title: 'Global coordinate grid', textContent: 'G', tabIndex: 0}),
@@ -96,112 +83,104 @@ export const ShaderPanel = function ShaderPanel(options) {
     this.shaderButtons.normals     = fE('b', {className: 'button', title: 'RGB-encoded normals', textContent: 'N', tabIndex: 0}),
     this.shaderButtons.psychedelic = fE('b', {className: 'button', title: 'Psychedelic', textContent: 'S', tabIndex: 0}),
     fE('div', {}, [
-      fE('text', {textContent: 'Alpha:'}),
+      'Alpha:',
       this.controls.alpha = fE('input', {type: 'range', min: 0, max: 1, step: 0.01}),
     ]),
     fE('div', {}, [
-      fE('text', {textContent: 'Local:'}),
+      'Local:',
       this.controls.local = fE('input', {type: 'range', min: 0, max: 1, step: 1}),
     ]),
     fE('div', {}, [
-      fE('text', {textContent: 'Sun direction:'}),
+      'Sun direction:',
       this.controls.sunDirection = fE('input', {type: 'text'}),
     ]),
     fE('div', {}, [
-      fE('text', {textContent: 'Ambient color:'}),
+      'Ambient color:',
       this.controls.ambient = fE('input', {type: 'text'}),
     ]),
     fE('div', {}, [
-      fE('text', {textContent: 'Diffuse color:'}),
+      'Diffuse color:',
       this.controls.diffuse = fE('input', {type: 'text'}),
     ]),
     fE('div', {}, [
-      fE('text', {textContent: 'Specular color:'}),
+      'Specular color:',
       this.controls.specular = fE('input', {type: 'text'}),
     ]),
     fE('div', {}, [
-      fE('text', {textContent: 'Show axes:'}),
+      'Show axes:',
       this.controls.showAxes = fE('input', {type: 'text'}),
     ]),
     fE('div', {}, [
-      fE('text', {textContent: 'Axis weight:'}),
+      'Axis weight:',
       this.controls.axisWeight = fE('input', {type: 'text'}),
     ]),
     fE('div', {}, [
-      fE('text', {textContent: 'Show grid:'}),
+      'Show grid:',
       this.controls.showGrid = fE('input', {type: 'text'}),
     ]),
     fE('div', {}, [
-      fE('text', {textContent: 'Grid weight:'}),
+      'Grid weight:',
       this.controls.gridWeight = fE('input', {type: 'text'}),
     ]),
     fE('div', {}, [
-      fE('text', {textContent: 'Grid spacing:'}),
+      'Grid spacing:',
       this.controls.gridSpacing = fE('input', {type: 'text'}),
     ]),
     fE('div', {}, [
-      fE('text', {textContent: 'Fade distance:'}),
+      'Fade distance:',
       this.controls.fadeDistance = fE('input', {type: 'text'}),
     ]),
     fE('div', {}, [
-      fE('text', {textContent: 'Mode:'}),
+      'Mode:',
       this.controls.mode = fE('input', {type: 'range', min: 0, max: 1, step: 1}),
     ]),
     fE('div', {}, [
-      fE('text', {textContent: 'Wavelength:'}),
+      'Wavelength:',
       this.controls.wavelength = fE('input', {type: 'text'}),
     ]),
     fE('div', {}, [
-      fE('text', {textContent: 'Frequency:'}),
+      'Frequency:',
       this.controls.frequency = fE('input', {type: 'text'}),
     ]),
-  ]);
+  ])
   
-  this.domElement.appendChild(this.content);
-  
-  // @prop Object keyCuts -- Shortcuts for shader buttons are added to the inherited .keyCuts property
-  this.keyCuts[80] = this.shaderButtons.original;
-  this.keyCuts[71] = this.shaderButtons.global;
-  this.keyCuts[76] = this.shaderButtons.local;
-  this.keyCuts[72] = this.shaderButtons.ghost;
-  this.keyCuts[78] = this.shaderButtons.normals;
-  this.keyCuts[83] = this.shaderButtons.psychedelic;
-  
-  var self = this;
-  
-  // @event set_material {String materialName} -- Emitted to signal a request for a new shader. Does not actually change the shader by itself
-  for(const i in this.shaderButtons) {
-    this.shaderButtons[i].addEventListener('click', function(e) {
-      self.emit('set_material', {materialName: i});
-    });
-  }
-  
-  for(const i in this.controls) {
-    switch(this.controls[i].type) {
-      case 'range':
-        this.controls[i].addEventListener('input', function(e) {
-          self.currentShader[i] = self.controls[i].value;
-          self.currentShader.updateUniforms();
-        });
-        break;
-      case 'text':
-        this.controls[i].addEventListener('change', function(e) {
-          self.currentShader[i].fromString(self.controls[i].value);
-          self.currentShader.updateUniforms();
-        });
-        
-        self.controls[i].addEventListener('keydown', function(e) {
-          e.stopPropagation();
-        });
-        break;
+  constructor() {
+    super()
+    
+    var self = this
+    
+    // @event set_material {String materialName} -- Emitted to signal a request for a new shader. Does not actually change the shader by itself
+    for(const i in this.shaderButtons) {
+      this.shaderButtons[i].addEventListener('click', function(e) {
+        self.emit('set_material', {materialName: i})
+      })
+    }
+    
+    for(const i in this.controls) {
+      switch(this.controls[i].type) {
+        case 'range':
+          this.controls[i].addEventListener('input', function(e) {
+            self.currentShader[i] = self.controls[i].value
+            self.currentShader.updateUniforms()
+          })
+          break
+        case 'text':
+          this.controls[i].addEventListener('change', function(e) {
+            self.currentShader[i].fromString(self.controls[i].value)
+            self.currentShader.updateUniforms()
+          })
+          
+          self.controls[i].addEventListener('keydown', function(e) {
+            e.stopPropagation()
+          })
+          break
+      }
     }
   }
 }
-ShaderPanel.prototype = Object.create(PanelUI.Panel.prototype);
-ShaderPanel.prototype.constructor = ShaderPanel;
 
 // @method proto undefined changeShader({THREE.ShaderMaterial materialRef}) -- Used to notify ShaderPanel that the shader has been changed
-ShaderPanel.prototype.changeShader = function(e) {
+ShaderPanelData.prototype.changeShader = function(e) {
   this.currentShader = e.materialRef;
   
   for(var i in this.shaderButtons) {
@@ -222,59 +201,39 @@ ShaderPanel.prototype.changeShader = function(e) {
   }
 }
 
-/**
- * @module CastleModules.ObjectPanel inherits PanelUI.Panel
- * @description UI panel to interact with objects in a three.js scene
- * 
- * @example var objectPanel = new CastleModules.ObjectPanel();
- * @example picker.on('select', objectPanel.selectHandler);
- * @example objectPanel.on('close', picker.unselect);
- */
-export const ObjectPanel = function ObjectPanel(options) {
-  PanelUI.Panel.call(this, {id: 'object', heading: 'None', accessKey: 'o'});
+export class ObjectPanelData extends NoPanelJustData {
+  heading = 'Inspector'
+  content = fE('div')
+  actions = []
   
-  // @prop HTMLElement content -- Div tag to hold panel-specific content
-  this.content = fE('div', {title: 'Hold shift to use these shortcuts'});
-  this.domElement.appendChild(this.content);
-  
-  // @prop [HTMLElement] actions -- Holds div tags used to activate each action. May be attached or not
-  this.actions = [];
-  for(var i = 0, endi = 8; i < endi; ++i) {
-    this.actions[i] = fE('div');
+  constructor() {
+    super()
+    
+    this.content.addEventListener('keydown', e => {
+      if(!e.altKey && !e.ctrlKey && e.shiftKey && 49 <= e.keyCode && e.keyCode <= 56) {
+        e.stopPropagation()
+        
+        this.actions[e.keyCode - 49].dispatchEvent(new MouseEvent('click'))
+      }
+    })
   }
   
-  // @method undefined selectHandler({THREE_Densaugeo.IntObject target}) -- Links ObjectPanel to an interactive three.js object
-  this.selectHandler = e => {
-    this.domElement.children[0].textContent = e.target.name;
+  selectHandler = e => {
+    this.content.replaceChildren(fE('div', [
+      'Inspecting ',
+      fE('text', { textContent: e.target.name, style: 'color:#0ff' }),
+      '. Hold shift to use these shortcuts:',
+    ]))
     
-    this.clear();
+    this.actions = []
     
     Object.keys(e.target.controls).forEach((v, i, a) => {
-      this.actions[i].textContent = (i + 1) +  ' - ' + v;
-      this.actions[i].onclick = e.target.controls[v];
-      this.content.appendChild(this.actions[i]);
-    });
-    
-    this.open();
-    
-    this.domElement.focus();
-  }
-  
-  this.domElement.addEventListener('keydown', e => {
-    if(!e.altKey && !e.ctrlKey && e.shiftKey && 49 <= e.keyCode && e.keyCode <= 56) {
-      e.stopPropagation();
-      
-      this.actions[e.keyCode - 49].dispatchEvent(new MouseEvent('click'));
-    }
-  });
-}
-ObjectPanel.prototype = Object.create(PanelUI.Panel.prototype);
-ObjectPanel.prototype.constructor = ObjectPanel;
-
-// @method proto undefined clear() -- Clears .content
-ObjectPanel.prototype.clear = function() {
-  while(this.content.children.length > 0) {
-    this.content.removeChild(this.content.firstChild);
+      this.actions[i] = this.content.fE('div', {
+        textContent: (i + 1) +  ' - ' + v,
+        tabIndex: 0,
+        onclick: e.target.controls[v],
+      })
+    })
   }
 }
 

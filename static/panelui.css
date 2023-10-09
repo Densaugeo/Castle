@@ -31,10 +31,6 @@
   visibility: visible;
   background: rgba(0, 0, 0, 0.75);
 }
-.panel:hover,
-.panel:focus {
-  z-index: 2;
-}
 .panel_heading {
   min-height: 24px;
   margin-bottom: 6px;
@@ -54,6 +50,9 @@
   margin: 6px;
   font-size: 24px;
   text-align: center;
+}
+.button.enabled {
+  color: #0ff;
 }
 .button:hover {
   color: #0f0;

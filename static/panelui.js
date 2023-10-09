@@ -12,7 +12,7 @@
  * @returns {HTMLElement}
  */
 export const fE = (tagName, properties={}, children=[]) => {
-    if(properties instanceof Array) {
+  if(properties instanceof Array) {
     children = properties.concat(children)
     properties = {}
   }
@@ -96,7 +96,7 @@ export const Sidebar = function Sidebar() {
     this.domElement.appendChild(element);
   }
   
-  document.addEventListener('keydown', e => {
+  this.domElement.addEventListener('keydown', e => {
     if(!e.altKey && !e.ctrlKey && !e.shiftKey && e.keyCode === 13 && e.target.classList.contains('button')) {
       e.target.dispatchEvent(new MouseEvent('click'));
     }
@@ -113,44 +113,25 @@ export const Sidebar = function Sidebar() {
 Sidebar.prototype = Object.create(EventEmitter.prototype);
 Sidebar.prototype.constructor = Sidebar;
 
-/**
- * @module PanelUI.Panel inherits EventEmitter
- * @description Makes a panel. Includes close button
- * 
- * @example var panel = new PanelUI.Panel({id: 'css_id', heading: 'Your heading here', closeButton: true, accessKey: 'a'});
- * @example panel.open();
- * 
- * @option String  accessKey   -- Browser accesskey
- * @option Boolean closeButton -- Show a close button?
- * @option String  heading     -- Heading text
- * @option String  id          -- CSS ID
- */
-export const Panel = function Panel(options) {
+export const Panel = function Panel() {
   EventEmitter.call(this);
   
-  var self = this;
+  var self = this
   
-  this.container = options.container ?? document.body
+  this.content = null
   
   // @prop HTMLElement domElement -- div tag that holds all of the Panel's HTML elements
-  this.domElement = fE('div', {id: options.id, className: 'panel', tabIndex: 0, accessKey: options.accessKey || ''}, [
-    fE('div', {className: 'panel_heading', textContent: options.heading || 'Heading', title: 'Click and drag to move panel'}),
-  ]);
-  
-  this.domElement.title = (options.heading || 'Heading') + (options.accessKey ? '\n\nAccess Key: ' + options.accessKey.toUpperCase() : '');
+  this.domElement = fE('div', { className: 'panel', tabIndex: 0,
+    style: 'display:none' }, [
+    this.heading_element = fE('div', { className: 'panel_heading' }),
+    this.closeButton = fE('i', { className: 'fa fa-close panel_close button', 
+      tabIndex: 0, title: 'Close panel\n\nKey: Q' }),
+  ])
   
   // @prop Object keyCuts -- Key-value store of keyboard shortcuts. Keys are .keyCode numbers, values are HTMLElement references
   this.keyCuts = {};
   
-  // @prop HTMLElement closeButton -- Reference to the close button (may not exist, depending on options)
-  this.closeButton = null;
-  if(options.closeButton != false) {
-    this.domElement.appendChild(
-      this.closeButton = fE('i', {className: 'fa fa-close panel_close button', tabIndex: 0, title: 'Close panel\n\nKey: Q'})
-    );
-    
-    this.keyCuts[81] = this.closeButton; // Q is for quit
-  }
+  this.keyCuts[81] = this.closeButton; // Q is for quit
   
   this.domElement.addEventListener('keydown', e => {
     if(!e.altKey && !e.ctrlKey && !e.shiftKey && this.keyCuts[e.keyCode]) {
@@ -158,44 +139,41 @@ export const Panel = function Panel(options) {
       
       this.keyCuts[e.keyCode].dispatchEvent(new MouseEvent('click'));
     }
+    
+    if(!e.altKey && !e.ctrlKey && !e.shiftKey && e.keyCode == 13) {
+      e.stopPropagation()
+      
+      e.target.dispatchEvent(new MouseEvent('click'))
+    }
   });
   
-  if(options.closeButton != false) {
-    this.closeButton.addEventListener('click', e => {
-      self.close();
-    });
-  }
+  this.closeButton.addEventListener('click', e => {
+    self.close();
+  });
 }
 Panel.prototype = Object.create(EventEmitter.prototype);
 Panel.prototype.constructor = Panel;
 
-// @method proto undefined open(Boolean focus) -- Adds Panel's domElement to the document. If focus is set, also focuses .domElement
-Panel.prototype.open = function(focus) {
-  this.container.appendChild(this.domElement);
+Panel.prototype.open = function(heading, content) {
+  this.domElement.title = heading
+  this.heading_element.textContent = heading
   
-  if(focus) {
-    this.domElement.focus();
-  }
+  if(this.content) this.domElement.replaceChild(content, this.content)
+  else this.domElement.append(content)
+  this.domElement.style.display = ''
+  
+  this.content = content
+  
+  this.domElement.focus()
 }
 
 // @method proto undefined close() -- Removes Panel's domElement from the document
 // @event close {} -- Fired on panel close
 Panel.prototype.close = function() {
-  this.container.removeChild(this.domElement);
+  this.domElement.style.display = 'none'
+  this.domElement.removeChild(this.content)
   
-  this.emit('close');
-}
-
-// @method proto Boolean isOpen() -- Returns whether panel is currently open (attached to document)
-Panel.prototype.isOpen = function() {
-  return this.domElement.parentNode === this.container;
-}
-
-// @method proto undefined toggleOpen(Boolean focus) -- Toggle .domElement on and off of this.container
-Panel.prototype.toggleOpen = function(focus) {
-  if(this.isOpen()) {
-    this.close();
-  } else {
-    this.open(focus);
-  }
+  this.content = null
+  
+  this.emit('close')
 }

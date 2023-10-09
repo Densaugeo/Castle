@@ -120,23 +120,23 @@ class LegoCastle extends HTMLElement {
     this.sidebar.addButton({ buttonName: 'help', faClass: 'fa-question', title: 'Help' })
     this.sidebar.addButton({ buttonName: 'shader', faClass: 'fa-eye', title: 'Change shader' })
     this.sidebar.addButton({ buttonName: 'fs', faClass: 'fa-arrows-alt', title: 'Fullscreen' })
-    this.sidebar.addButton({ buttonName: 'clear', faClass: 'fa-recycle', title: 'Clear local storage' })
+    this.sidebar.addButton({ buttonName: 'inspector', faClass: 'fa-search', title: 'Inspector' })
     this.sidebar.addButton({ buttonName: 'shader_settings', faClass: 'fa-cog', title: 'Adjust shader settings' })
     
     shadow.appendChild(this.sidebar.domElement)
     
-    this.helpPanel = new CastleModules.HelpPanel()
+    this.helpPanelData = new CastleModules.HelpPanelData()
     this.shaderChanger = new CastleModules.ShaderChanger()
-    this.shaderPanel = new CastleModules.ShaderPanel()
-    this.objectPanel = new CastleModules.ObjectPanel()
+    this.shaderPanelData = new CastleModules.ShaderPanelData()
+    this.objectPanelData = new CastleModules.ObjectPanelData()
     this.picker = new THREE_Densaugeo.Picker()
     
-    this.helpPanel.container = shadow
-    this.shaderChanger.container = shadow
-    this.shaderPanel.container = shadow
-    this.objectPanel.container = shadow
-    this.picker.container = shadow
+    this.panel = new PanelUI.Panel()
+    shadow.append(this.panel.domElement)
     
+    this.shaderChanger.container = shadow
+    
+    this.picker.container = shadow
     this.picker.setRenderer(this.renderer)
     this.picker.camera = this.camera
     
@@ -159,12 +159,7 @@ class LegoCastle extends HTMLElement {
     }
     
     this.sidebar.on('help', e => {
-      if(this.helpPanel.isOpen()) {
-        this.helpPanel.close()
-      } else {
-        this.helpPanel.open()
-        this.helpPanel.domElement.focus()
-      }
+      this.panel.open('Controls', this.helpPanelData.content)
     })
     
     this.sidebar.on('shader', e => {
@@ -179,36 +174,35 @@ class LegoCastle extends HTMLElement {
       }
     })
     
-    this.sidebar.on('clear', e => {
-      localStorage.clear()
+    this.sidebar.on('inspector', e => {
+      this.panel.open('Inspector', this.objectPanelData.content)
     })
     
     this.sidebar.on('shader_settings', e => {
-      this.shaderPanel.isOpen() ? this.shaderPanel.close() :
-        this.shaderPanel.open()
-      this.shaderPanel.domElement.focus()
+      this.panel.open('Shader Settings', this.shaderPanelData.content)
     })
     
     this.shaderChanger.on('change', e => {
       e.materialRef = this.water.material
-      this.shaderPanel.changeShader(e)
+      this.shaderPanelData.changeShader(e)
     })
     
-    this.shaderPanel.on('set_material', e => {
+    this.shaderPanelData.on('set_material', e => {
       this.shaderChanger.setMaterial(this.scene, e.materialName)
     })
     
     castleMap.castleMap.on('loaded', () => {
-      this.shaderPanel.changeShader({ materialRef: this.water.material })
+      this.shaderPanelData.changeShader({ materialRef: this.water.material })
       
       for(let i in castleMap.castleMap.gates) {
         this.picker.intObjects.push(castleMap.castleMap.gates[i])
       }
     })
     
-    this.objectPanel.on('close', this.picker.unselect)
+    // With the panels consolidated, I need a new way to unselect 3D objects
+    //this.panel.on('close', this.picker.unselect)
     
-    this.picker.on('select', this.objectPanel.selectHandler)
+    this.picker.on('select', this.objectPanelData.selectHandler)
     
     if(this.width == null) this.width = 348
     if(this.height == null) this.height = 200
