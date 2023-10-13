@@ -117,11 +117,11 @@ class LegoCastle extends HTMLElement {
     shadow.appendChild(this.renderer.domElement)
     
     this.sidebar = new PanelUI.Sidebar();
-    this.sidebar.addButton({ buttonName: 'help', faClass: 'fa-question', title: 'Help' })
-    this.sidebar.addButton({ buttonName: 'shader', faClass: 'fa-eye', title: 'Change shader' })
-    this.sidebar.addButton({ buttonName: 'fs', faClass: 'fa-arrows-alt', title: 'Fullscreen' })
-    this.sidebar.addButton({ buttonName: 'inspector', faClass: 'fa-search', title: 'Inspector' })
-    this.sidebar.addButton({ buttonName: 'shader_settings', faClass: 'fa-cog', title: 'Adjust shader settings' })
+    this.helpButton = this.sidebar.addButton({ buttonName: 'help', faClass: 'fa-question', title: 'Help' })
+    this.shaderButton = this.sidebar.addButton({ buttonName: 'shader', faClass: 'fa-eye', title: 'Change shader' })
+    this.fullscreenButton = this.sidebar.addButton({ buttonName: 'fs', faClass: 'fa-arrows-alt', title: 'Fullscreen' })
+    this.inspectorButton = this.sidebar.addButton({ buttonName: 'inspector', faClass: 'fa-search', title: 'Inspector' })
+    this.shaderSettingsButton = this.sidebar.addButton({ buttonName: 'shader_settings', faClass: 'fa-cog', title: 'Adjust shader settings' })
     
     shadow.appendChild(this.sidebar.domElement)
     
@@ -158,15 +158,15 @@ class LegoCastle extends HTMLElement {
       return document.fullscreenElement || document.msFullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement;
     }
     
-    this.sidebar.on('help', () => {
+    this.helpButton.addEventListener('trigger', () => {
       this.panel.toggle('Controls', this.helpPanelData.content)
     })
     
-    this.sidebar.on('shader', e => {
+    this.shaderButton.addEventListener('trigger', e => {
       this.shaderChanger.nextMaterial(this.scene)
     })
     
-    this.sidebar.on('fs', e => {
+    this.fullscreenButton.addEventListener('trigger', e => {
       if(getFullscreenElement() == null) {
         document.body.requestFullscreen()
       } else {
@@ -182,11 +182,11 @@ class LegoCastle extends HTMLElement {
       }
     })
     
-    this.sidebar.on('inspector', () => {
+    this.inspectorButton.addEventListener('trigger', () => {
       this.panel.toggle('Inspector', this.objectPanelData.content)
     })
     
-    this.sidebar.on('shader_settings', () => {
+    this.shaderSettingsButton.addEventListener('trigger', () => {
       this.panel.toggle('Shader Settings', this.shaderPanelData.content)
     })
     

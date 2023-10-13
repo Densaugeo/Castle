@@ -87,18 +87,19 @@ export const Sidebar = function Sidebar() {
       tabIndex   : 0,
     });
     
-    element.addEventListener('click', e => {
-      this.domElement.focus();
-      this.emit('trigger', {buttonName: options.buttonName});
-      this.emit(options.buttonName);
-    });
-    
     this.domElement.appendChild(element);
+    
+    return element
   }
+  
+  this.domElement.addEventListener('click', e => {
+    this.domElement.focus()
+    e.target.dispatchEvent(new CustomEvent('trigger'))
+  })
   
   this.domElement.addEventListener('keydown', e => {
     if(!e.altKey && !e.ctrlKey && !e.shiftKey && e.keyCode === 13 && e.target.classList.contains('button')) {
-      e.target.dispatchEvent(new MouseEvent('click'));
+      e.target.dispatchEvent(new CustomEvent('trigger'));
     }
   });
   
@@ -106,7 +107,7 @@ export const Sidebar = function Sidebar() {
     var index = this.keyCodesToButtonIndices[e.keyCode];
     
     if(!e.altKey && !e.ctrlKey && !e.shiftKey && this.children[index]) {
-      this.children[index].dispatchEvent(new MouseEvent('click'));
+      this.children[index].dispatchEvent(new CustomEvent('trigger'));
     }
   });
 }
