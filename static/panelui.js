@@ -116,40 +116,13 @@ Sidebar.prototype.constructor = Sidebar;
 export const Panel = function Panel() {
   EventEmitter.call(this);
   
-  var self = this
-  
   this.content = null
   
   // @prop HTMLElement domElement -- div tag that holds all of the Panel's HTML elements
   this.domElement = fE('div', { className: 'panel', tabIndex: 0,
     style: 'display:none' }, [
     this.heading_element = fE('div', { className: 'panel_heading' }),
-    this.closeButton = fE('i', { className: 'fa fa-close panel_close button', 
-      tabIndex: 0, title: 'Close panel\n\nKey: Q' }),
   ])
-  
-  // @prop Object keyCuts -- Key-value store of keyboard shortcuts. Keys are .keyCode numbers, values are HTMLElement references
-  this.keyCuts = {};
-  
-  this.keyCuts[81] = this.closeButton; // Q is for quit
-  
-  this.domElement.addEventListener('keydown', e => {
-    if(!e.altKey && !e.ctrlKey && !e.shiftKey && this.keyCuts[e.keyCode]) {
-      e.stopPropagation();
-      
-      this.keyCuts[e.keyCode].dispatchEvent(new MouseEvent('click'));
-    }
-    
-    if(!e.altKey && !e.ctrlKey && !e.shiftKey && e.keyCode == 13) {
-      e.stopPropagation()
-      
-      e.target.dispatchEvent(new MouseEvent('click'))
-    }
-  });
-  
-  this.closeButton.addEventListener('click', e => {
-    self.close();
-  });
 }
 Panel.prototype = Object.create(EventEmitter.prototype);
 Panel.prototype.constructor = Panel;
@@ -165,6 +138,8 @@ Panel.prototype.open = function(heading, content) {
   this.content = content
   
   this.domElement.focus()
+  
+  this.emit('open')
 }
 
 // @method proto undefined close() -- Removes Panel's domElement from the document
@@ -176,4 +151,9 @@ Panel.prototype.close = function() {
   this.content = null
   
   this.emit('close')
+}
+
+Panel.prototype.toggle = function(heading, content) {
+  if(this.content === content) this.close()
+  else this.open(heading, content)
 }

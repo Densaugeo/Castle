@@ -158,8 +158,8 @@ class LegoCastle extends HTMLElement {
       return document.fullscreenElement || document.msFullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement;
     }
     
-    this.sidebar.on('help', e => {
-      this.panel.open('Controls', this.helpPanelData.content)
+    this.sidebar.on('help', () => {
+      this.panel.toggle('Controls', this.helpPanelData.content)
     })
     
     this.sidebar.on('shader', e => {
@@ -174,12 +174,20 @@ class LegoCastle extends HTMLElement {
       }
     })
     
-    this.sidebar.on('inspector', e => {
-      this.panel.open('Inspector', this.objectPanelData.content)
+    document.addEventListener('fullscreenchange', () => {
+      if(document.fullscreenElement === document.body) {
+        this.sidebar.domElement.children[2].classList.add('enabled')
+      } else {
+        this.sidebar.domElement.children[2].classList.remove('enabled')
+      }
     })
     
-    this.sidebar.on('shader_settings', e => {
-      this.panel.open('Shader Settings', this.shaderPanelData.content)
+    this.sidebar.on('inspector', () => {
+      this.panel.toggle('Inspector', this.objectPanelData.content)
+    })
+    
+    this.sidebar.on('shader_settings', () => {
+      this.panel.toggle('Shader Settings', this.shaderPanelData.content)
     })
     
     this.shaderChanger.on('change', e => {
@@ -189,6 +197,30 @@ class LegoCastle extends HTMLElement {
     
     this.shaderPanelData.on('set_material', e => {
       this.shaderChanger.setMaterial(this.scene, e.materialName)
+    })
+    
+    this.panel.on('open', () => {
+      for(let element of this.shadow.querySelectorAll('#sidebar > .enabled')) {
+        element.classList.remove('enabled')
+      }
+      
+      switch(this.panel.content) {
+        case this.helpPanelData.content:
+          this.sidebar.domElement.children[0].classList.add('enabled')
+          break;
+        case this.objectPanelData.content:
+          this.sidebar.domElement.children[3].classList.add('enabled')
+          break;
+        case this.shaderPanelData.content:
+          this.sidebar.domElement.children[4].classList.add('enabled')
+          break;
+      }
+    })
+    
+    this.panel.on('close', () => {
+      for(let element of this.shadow.querySelectorAll('#sidebar > .enabled')) {
+        element.classList.remove('enabled')
+      }
     })
     
     castleMap.castleMap.on('loaded', () => {
