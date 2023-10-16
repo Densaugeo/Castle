@@ -34,7 +34,7 @@ input {
 
 canvas {
   position: absolute;
-  left: 48px;
+  left: 36px;
 }
 `)
 
@@ -116,23 +116,36 @@ class LegoCastle extends HTMLElement {
     
     shadow.appendChild(this.renderer.domElement)
     
-    this.sidebar = new PanelUI.Sidebar();
-    this.helpButton = this.sidebar.addButton({ buttonName: 'help', faClass: 'fa-question', title: 'Help' })
-    this.shaderButton = this.sidebar.addButton({ buttonName: 'shader', faClass: 'fa-eye', title: 'Change shader' })
-    this.fullscreenButton = this.sidebar.addButton({ buttonName: 'fs', faClass: 'fa-arrows-alt', title: 'Fullscreen' })
-    this.inspectorButton = this.sidebar.addButton({ buttonName: 'inspector', faClass: 'fa-search', title: 'Inspector' })
-    this.shaderSettingsButton = this.sidebar.addButton({ buttonName: 'shader_settings', faClass: 'fa-cog', title: 'Adjust shader settings' })
+    this.panel = new PanelUI.Panel()
+    shadow.append(this.panel.domElement)
+    
+    this.shaderChanger = new CastleModules.ShaderChanger()
+    this.objectPanelData = new CastleModules.ObjectPanelData()
+    this.shaderPanelData = new CastleModules.ShaderPanelData()
+    
+    this.sidebar = new PanelUI.Sidebar({ linked_panel: this.panel });
+    
+    this.sidebar.setCommand(0, new PanelUI.ShowPanel('fa-question', 'Help',
+      this.panel, new CastleModules.HelpPanelData().content))
+    
+    this.sidebar.setCommand(1, new PanelUI.Command('fa-eye', 'Change shader',
+      () => { this.shaderChanger.nextMaterial(this.scene) }))
+    
+    this.fs_command = new PanelUI.Command('fa-arrows-alt', 'Fullscreen', () => {
+      if(getFullscreenElement() == null) document.body.requestFullscreen()
+      else document.exitFullscreen()
+    })
+    this.sidebar.setCommand(2, this.fs_command)
+    
+    this.sidebar.setCommand(3, new PanelUI.ShowPanel('fa-search', 'Inspector',
+      this.panel, this.objectPanelData.content))
+    
+    this.sidebar.setCommand(4, new PanelUI.ShowPanel('fa-cog',
+      'Shader Settings', this.panel, this.shaderPanelData.content))
     
     shadow.appendChild(this.sidebar.domElement)
     
-    this.helpPanelData = new CastleModules.HelpPanelData()
-    this.shaderChanger = new CastleModules.ShaderChanger()
-    this.shaderPanelData = new CastleModules.ShaderPanelData()
-    this.objectPanelData = new CastleModules.ObjectPanelData()
     this.picker = new THREE_Densaugeo.Picker()
-    
-    this.panel = new PanelUI.Panel()
-    shadow.append(this.panel.domElement)
     
     this.shaderChanger.container = shadow
     
@@ -158,36 +171,8 @@ class LegoCastle extends HTMLElement {
       return document.fullscreenElement || document.msFullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement;
     }
     
-    this.helpButton.addEventListener('trigger', () => {
-      this.panel.toggle('Controls', this.helpPanelData.content)
-    })
-    
-    this.shaderButton.addEventListener('trigger', e => {
-      this.shaderChanger.nextMaterial(this.scene)
-    })
-    
-    this.fullscreenButton.addEventListener('trigger', e => {
-      if(getFullscreenElement() == null) {
-        document.body.requestFullscreen()
-      } else {
-        document.exitFullscreen()
-      }
-    })
-    
     document.addEventListener('fullscreenchange', () => {
-      if(document.fullscreenElement === document.body) {
-        this.sidebar.domElement.children[2].classList.add('enabled')
-      } else {
-        this.sidebar.domElement.children[2].classList.remove('enabled')
-      }
-    })
-    
-    this.inspectorButton.addEventListener('trigger', () => {
-      this.panel.toggle('Inspector', this.objectPanelData.content)
-    })
-    
-    this.shaderSettingsButton.addEventListener('trigger', () => {
-      this.panel.toggle('Shader Settings', this.shaderPanelData.content)
+      this.fs_command.enabled = document.fullscreenElement === document.body
     })
     
     this.shaderChanger.on('change', e => {
@@ -197,30 +182,6 @@ class LegoCastle extends HTMLElement {
     
     this.shaderPanelData.on('set_material', e => {
       this.shaderChanger.setMaterial(this.scene, e.materialName)
-    })
-    
-    this.panel.on('open', () => {
-      for(let element of this.shadow.querySelectorAll('#sidebar > .enabled')) {
-        element.classList.remove('enabled')
-      }
-      
-      switch(this.panel.content) {
-        case this.helpPanelData.content:
-          this.sidebar.domElement.children[0].classList.add('enabled')
-          break;
-        case this.objectPanelData.content:
-          this.sidebar.domElement.children[3].classList.add('enabled')
-          break;
-        case this.shaderPanelData.content:
-          this.sidebar.domElement.children[4].classList.add('enabled')
-          break;
-      }
-    })
-    
-    this.panel.on('close', () => {
-      for(let element of this.shadow.querySelectorAll('#sidebar > .enabled')) {
-        element.classList.remove('enabled')
-      }
     })
     
     castleMap.castleMap.on('loaded', () => {
@@ -236,7 +197,7 @@ class LegoCastle extends HTMLElement {
     
     this.picker.on('select', this.objectPanelData.selectHandler)
     
-    if(this.width == null) this.width = 348
+    if(this.width == null) this.width = 336
     if(this.height == null) this.height = 200
     
     // Custom attributes set in HTML must be explicitly applied at construction
@@ -283,8 +244,8 @@ class LegoCastle extends HTMLElement {
     
     switch(name) {
       case 'width':
-        this.camera.aspect = (v - 48)/this.renderer.domElement.height
-        this.renderer.setSize(v - 48, this.renderer.domElement.height)
+        this.camera.aspect = (v - 36)/this.renderer.domElement.height
+        this.renderer.setSize(v - 36, this.renderer.domElement.height)
         
         this.style.width = v + 'px'
         break

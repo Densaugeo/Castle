@@ -8,17 +8,18 @@
 #sidebar {
   position: absolute;
   width: 36px;
-  height: calc(100% - 12px);
+  height: 100%;
   z-index: 2;
-  padding: 6px;
+  padding: 0;
   background: #000;
   /* This nulls out the tab selection box */
   outline: none;
+  overflow: scroll;
 }
 
 .panel {
   position: absolute;
-  left: 48px;
+  left: 36px;
   top: 0;
   width: 300px;
   z-index: 2;
@@ -45,21 +46,47 @@
   z-index: 1;
 }
 
+#sidebar > div {
+  position: relative;
+  width: 36px;
+  height: 35px;
+  margin: 0;
+  border-bottom: 1px solid #444;
+  font-size: 12px;
+}
+
+/* All dens-buttons should have .fa, and it's needed to make sure .fa font rules
+   are overwritten */
+#sidebar > div > dens-button.fa,
+#sidebar > div > .button.fa {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+dens-button.fa,
 .button {
   width: 24px;
-  margin: 6px;
+  height: 24px;
+  margin: 0;
+  padding: 6px;
   font-size: 24px;
   text-align: center;
+  font-weight: bold;
 }
+dens-button.enabled,
 .button.enabled {
   color: #0ff;
 }
+dens-button:hover,
 .button:hover {
   color: #0f0;
 }
+dens-button:focus,
 .button:focus {
   outline: 1px dashed #0f0;
 }
+dens-button:focus:active,
 .button:focus:active {
   outline: none;
   color: #c0f;

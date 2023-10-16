@@ -57,11 +57,24 @@ HTMLElement.prototype.fE = function() {
  * @example sidebar.on('do_stuff', function() {console.log('Doing stuff')});
  * @example sidebar.on('trigger', function(e) {console.log(e.buttonName === 'do_stuff')});
  */
-export const Sidebar = function Sidebar() {
+export const Sidebar = function Sidebar(options) {
   EventEmitter.call(this);
   
+  this.buttons = new Array(10)
+  
   // @prop HTMLElement domElement -- div tag that holds all of the Panel's HTML elements
-  this.domElement = fE('div', {id: 'sidebar', tabIndex: 1, accessKey: '1'});
+  this.domElement = fE('div', {id: 'sidebar', tabIndex: 1, accessKey: '1'}, [
+    fE('div', ['1', this.buttons[0] = fE('i', { tabIndex: 0 })]),
+    fE('div', ['2', this.buttons[1] = fE('i', { tabIndex: 0 })]),
+    fE('div', ['3', this.buttons[2] = fE('i', { tabIndex: 0 })]),
+    fE('div', ['4', this.buttons[3] = fE('i', { tabIndex: 0 })]),
+    fE('div', ['5', this.buttons[4] = fE('i', { tabIndex: 0 })]),
+    fE('div', ['6', this.buttons[5] = fE('i', { tabIndex: 0 })]),
+    fE('div', ['7', this.buttons[6] = fE('i', { tabIndex: 0 })]),
+    fE('div', ['8', this.buttons[7] = fE('i', { tabIndex: 0 })]),
+    fE('div', ['9', this.buttons[8] = fE('i', { tabIndex: 0 })]),
+    fE('div', ['0', this.buttons[9] = fE('i', { tabIndex: 0 })]),
+  ]);
   
   // @prop HTMLCollection children -- Alias for domElement.children
   this.children = this.domElement.children;
@@ -74,23 +87,52 @@ export const Sidebar = function Sidebar() {
   // @prop Array buttonIndicesToKeyChars -- Look up a button index and get a char for its key
   this.buttonIndicesToKeyChars = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='];
   
-  // @method undefined addButton(Object {String faClass, String title, String buttonName}) -- Add a button. Support font-awesome icon names
-  // @event trigger {String buttonName} -- Fired when a button is triggered
-  // @event [buttonName] {} -- Fired when a button is triggered. Event name is the buttonName defined when the corresponding button was added
-  this.addButton = function(/*Object*/ options) {
-    options = options || {};
+  this._commands = new Array(10).fill(null)
+  this._enable_listeners = new Array(10)
+  this._disable_listeners = new Array(10)
+  this.buttons.forEach((v, i) => {
+    this._enable_listeners [i] = () => v.classList.add   ('enabled')
+    this._disable_listeners[i] = () => v.classList.remove('enabled')
+  })
+  
+  /**
+   * @param {number} slot
+   * @param {Command} command
+  */
+  this.setCommand = function(slot, command) {
+    this.clearCommand(slot)
     
-    var element = fE('i', {
-      className  : 'fa ' + 'button ' + (options.faClass || ''),
-      textContent: options.char || '',
-      title      : (options.title || 'Not yet described') + '\n\nKey: ' + this.buttonIndicesToKeyChars[this.children.length],
-      tabIndex   : 0,
-    });
+    this._commands[slot] = command
     
-    this.domElement.appendChild(element);
+    const target = this.buttons[slot]
+    if(command.icon.length > 1) target.classList.add(command.icon)
+    if(command.icon.length === 1) target.textContent = command.icon
+    target.title = command.tooltip + '\n\n' + target.title
+    target.addEventListener('trigger', command.fn)
     
-    return element
+    command.on('enable' , this._enable_listeners [slot])
+    command.on('disable', this._disable_listeners[slot])
   }
+  
+  /**
+   * @param {number} slot
+   */
+  this.clearCommand = function(slot) {
+    const target = this.buttons[slot]
+    target.className = 'fa button'
+    target.textContent = ''
+    target.title = 'Key: ' + ((slot + 1) % 10)
+    target.removeEventListener('trigger', this._commands[slot])
+    
+    if(this._commands[slot]) {
+      this._commands[slot].off('enable' , this._enable_listeners [slot])
+      this._commands[slot].off('disable', this._disable_listeners[slot])
+    }
+    
+    this._commands[slot] = null
+  }
+  
+  for(let i = 0; i < 10; ++i) this.clearCommand(i)
   
   this.domElement.addEventListener('click', e => {
     this.domElement.focus()
@@ -106,13 +148,72 @@ export const Sidebar = function Sidebar() {
   document.addEventListener('keydown', e => {
     var index = this.keyCodesToButtonIndices[e.keyCode];
     
-    if(!e.altKey && !e.ctrlKey && !e.shiftKey && this.children[index]) {
-      this.children[index].dispatchEvent(new CustomEvent('trigger'));
+    if(!e.altKey && !e.ctrlKey && !e.shiftKey && this.buttons[index]) {
+      this.buttons[index].dispatchEvent(new CustomEvent('trigger'));
     }
   });
 }
 Sidebar.prototype = Object.create(EventEmitter.prototype);
 Sidebar.prototype.constructor = Sidebar;
+
+export class Command extends EventEmitter {
+  /** @type {string} */
+  #icon
+  get icon() { return this.#icon }
+  
+  /** @type {string} */
+  #tooltip
+  get tooltip() { return this.#tooltip }
+  
+  #fn
+  /** @type {function} */
+  get fn() { return this.#fn }
+  
+  /** @type {boolean} */
+  #enabled
+  get enabled() { return this.#enabled }
+  set enabled(v) {
+    this.#enabled = Boolean(v)
+    this.emit(this.#enabled ? 'enable' : 'disable')
+  }
+  
+  /**
+   * @param {string} icon
+   * @param {string} tooltip
+   * @param {function} fn
+  */
+  constructor(icon, tooltip, fn) {
+    if(icon.length > 1 && icon.substring(0, 3) !== 'fa-') {
+      throw TypeError('icon should be a single char or a font-awesome icon')
+    }
+    
+    super()
+    
+    this.#icon = icon
+    this.#tooltip = tooltip
+    this.#fn = fn
+    this.#enabled = false
+  }
+}
+
+export class ShowPanel extends Command {
+  /**
+   * @param {string} icon
+   * @param {string} tooltip
+   * @param {Panel} panel
+   * @param {???} panel_content
+  */
+  constructor(icon, tooltip, panel, panel_content) {
+    super(icon, tooltip, () => {
+      panel.toggle(tooltip, panel_content)
+    })
+    
+    // Suppress return values because EventEmitter sometimes uses them to remove
+    // listeners
+    panel.on('open' , () => { this.enabled = panel.content === panel_content })
+    panel.on('close', () => { this.enabled = false })
+  }
+}
 
 export const Panel = function Panel() {
   EventEmitter.call(this);
