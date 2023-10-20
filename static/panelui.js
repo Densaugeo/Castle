@@ -82,10 +82,10 @@ export const Sidebar = function Sidebar(options) {
   this.domElement.title = 'Key: ' + this.domElement.accessKeyLabel;
   
   // @prop Object keyCodesToButtonIndices -- Look up a keyCode and get a button index
-  this.keyCodesToButtonIndices = {49: 0, 50: 1, 51: 2, 52: 3, 53: 4, 54: 5, 55: 6, 56: 7, 57: 8, 58: 9, 48: 10, 173: 11, 61: 12};
+  this.keyCodesToButtonIndices = {49: 0, 50: 1, 51: 2, 52: 3, 53: 4, 54: 5, 55: 6, 56: 7, 57: 8, 58: 9, 48: 10};
   
   // @prop Array buttonIndicesToKeyChars -- Look up a button index and get a char for its key
-  this.buttonIndicesToKeyChars = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='];
+  this.buttonIndicesToKeyChars = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
   
   this._commands = new Array(10).fill(null)
   this._enable_listeners = new Array(10)
@@ -170,7 +170,7 @@ export class Command extends EventEmitter {
   get fn() { return this.#fn }
   
   /** @type {boolean} */
-  #enabled
+  #enabled = false
   get enabled() { return this.#enabled }
   set enabled(v) {
     this.#enabled = Boolean(v)
@@ -192,26 +192,36 @@ export class Command extends EventEmitter {
     this.#icon = icon
     this.#tooltip = tooltip
     this.#fn = fn
-    this.#enabled = false
   }
 }
 
-export class ShowPanel extends Command {
+export class Menu extends EventEmitter {
+  /** @type {string} */
+  get heading() { return this._heading }
+  
+  /** @type {HTMLElement} */
+  get content() { return this._content }
+  
+  /** @type {Command} */
+  get command() { return this._command }
+  
   /**
    * @param {string} icon
    * @param {string} tooltip
    * @param {Panel} panel
-   * @param {???} panel_content
-  */
-  constructor(icon, tooltip, panel, panel_content) {
-    super(icon, tooltip, () => {
-      panel.toggle(tooltip, panel_content)
+   */
+  constructor(icon, tooltip, panel) {
+    super()
+    
+    this._command = new Command(icon, tooltip, () => {
+      panel.toggle(this.heading, this.content)
     })
     
     // Suppress return values because EventEmitter sometimes uses them to remove
     // listeners
-    panel.on('open' , () => { this.enabled = panel.content === panel_content })
-    panel.on('close', () => { this.enabled = false })
+    panel.on('close', () => { this.command.enabled = false })
+    panel.on('open' , () => { this.command.enabled = panel.content ===
+      this.content })
   }
 }
 

@@ -120,13 +120,13 @@ class LegoCastle extends HTMLElement {
     shadow.append(this.panel.domElement)
     
     this.shaderChanger = new CastleModules.ShaderChanger()
-    this.objectPanelData = new CastleModules.ObjectPanelData()
-    this.shaderPanelData = new CastleModules.ShaderPanelData()
+    this.helpPanelData = new CastleModules.HelpPanelData(this.panel)
+    this.objectPanelData = new CastleModules.ObjectPanelData(this.panel)
+    this.shaderPanelData = new CastleModules.ShaderPanelData(this.panel)
     
     this.sidebar = new PanelUI.Sidebar({ linked_panel: this.panel });
     
-    this.sidebar.setCommand(0, new PanelUI.ShowPanel('fa-question', 'Help',
-      this.panel, new CastleModules.HelpPanelData().content))
+    this.sidebar.setCommand(0, this.helpPanelData.command)
     
     this.sidebar.setCommand(1, new PanelUI.Command('fa-eye', 'Change shader',
       () => { this.shaderChanger.nextMaterial(this.scene) }))
@@ -137,11 +137,9 @@ class LegoCastle extends HTMLElement {
     })
     this.sidebar.setCommand(2, this.fs_command)
     
-    this.sidebar.setCommand(3, new PanelUI.ShowPanel('fa-search', 'Inspector',
-      this.panel, this.objectPanelData.content))
+    this.sidebar.setCommand(3, this.objectPanelData.command)
     
-    this.sidebar.setCommand(4, new PanelUI.ShowPanel('fa-cog',
-      'Shader Settings', this.panel, this.shaderPanelData.content))
+    this.sidebar.setCommand(4, this.shaderPanelData.command)
     
     shadow.appendChild(this.sidebar.domElement)
     

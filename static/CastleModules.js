@@ -9,14 +9,10 @@ import * as THREE_Densaugeo from './three.Densaugeo.js';
 import * as PanelUI from './panelui.js'
 const fE = PanelUI.fE
 
-export class NoPanelJustData extends EventEmitter {
-  heading = 'Heading Goes Here'
-  content = fE('div', { textContent: 'Content goes here' } )
-}
-
-export class HelpPanelData extends NoPanelJustData {
-  heading = 'Controls'
-  content = fE('div', [
+export class HelpPanelData extends PanelUI.Menu {
+  _heading = 'Controls'
+  
+  _content = fE('div', [
     'Touchscreen:',
     fE('br'),
     'First finger drag - Pan',
@@ -58,10 +54,17 @@ export class HelpPanelData extends NoPanelJustData {
     fE('br'),
     'Left/right trigger - Throttle back/forward',
   ])
+  
+  /**
+   * @param {Panel} panel
+   */
+  constructor(panel) {
+    super('fa-question', 'Help', panel)
+  }
 }
 
-export class ShaderPanelData extends NoPanelJustData {
-  heading = 'Shader Settings'
+export class ShaderPanelData extends PanelUI.Menu {
+  _heading = 'Shader Settings'
   
   // @prop Object shaderButtons -- Holds HTMLElements used for shader selection buttons
   shaderButtons = {}
@@ -72,7 +75,7 @@ export class ShaderPanelData extends NoPanelJustData {
   // @prop THREE.ShaderMaterial currentShader -- Shader whose uniforms are currently displayed on ShaderPanel for editing
   currentShader = {}
   
-  content = fE('div', [
+  _content = fE('div', [
     fE('br'),
     'Current shader:',
     fE('br'),
@@ -144,8 +147,11 @@ export class ShaderPanelData extends NoPanelJustData {
     ]),
   ])
   
-  constructor() {
-    super()
+  /**
+   * @param {Panel} panel
+   */
+  constructor(panel) {
+    super('fa-cog', 'Shader Settings', panel)
     
     var self = this
     
@@ -201,13 +207,16 @@ ShaderPanelData.prototype.changeShader = function(e) {
   }
 }
 
-export class ObjectPanelData extends NoPanelJustData {
-  heading = 'Inspector'
-  content = fE('div')
+export class ObjectPanelData extends PanelUI.Menu {
+  _heading = 'Inspector'
+  _content = fE('div')
   actions = []
   
-  constructor() {
-    super()
+  /**
+   * @param {Panel} panel
+   */
+  constructor(panel) {
+    super('fa-search', 'Inspector', panel)
     
     this.content.addEventListener('keydown', e => {
       if(!e.altKey && !e.ctrlKey && e.shiftKey && 49 <= e.keyCode && e.keyCode <= 56) {

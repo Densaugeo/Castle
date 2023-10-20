@@ -55,16 +55,12 @@
   font-size: 12px;
 }
 
-/* All dens-buttons should have .fa, and it's needed to make sure .fa font rules
-   are overwritten */
-#sidebar > div > dens-button.fa,
 #sidebar > div > .button.fa {
   position: absolute;
   left: 0;
   top: 0;
 }
 
-dens-button.fa,
 .button {
   width: 24px;
   height: 24px;
@@ -74,19 +70,15 @@ dens-button.fa,
   text-align: center;
   font-weight: bold;
 }
-dens-button.enabled,
 .button.enabled {
   color: #0ff;
 }
-dens-button:hover,
 .button:hover {
   color: #0f0;
 }
-dens-button:focus,
 .button:focus {
   outline: 1px dashed #0f0;
 }
-dens-button:focus:active,
 .button:focus:active {
   outline: none;
   color: #c0f;
