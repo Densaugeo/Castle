@@ -9,6 +9,8 @@ export * as CastleModules from './CastleModules.js';
 import * as PanelUI from './panelui.js'
 export * as PanelUI from './panelui.js'
 
+import {GLTFLoader} from './three/loaders/GLTFLoader.js';
+
 THREE.ColorManagement.enabled = false
 const f3D = THREE_Densaugeo.forgeObject3D
 
@@ -91,6 +93,33 @@ class LegoCastle extends HTMLElement {
       position: [0, 0, -0.5],
     })
     this.scene.add(this.water)
+    
+    ///////////////////////////
+    // emg construction zone //
+    ///////////////////////////
+    
+    const self = this
+    ;(async () => {
+      const res = fetch('blocks.wasm')
+      const { instance } = await WebAssembly.instantiateStreaming(res)
+      instance.exports.gen_build_the_model(0)
+      const result = instance.exports.memory.buffer.slice(
+        instance.exports.model_pointer(),
+        instance.exports.model_pointer() + instance.exports.model_size(),
+      )
+      console.log(new TextDecoder().decode(result))
+      
+      const loader = new GLTFLoader()
+      loader.parse(result, '.', function(gltf) {
+        console.log(gltf)
+        
+        let new_battlement = gltf.scene.children[0].clone()
+        new_battlement.position.x = 7
+        new_battlement.position.y = -23
+        new_battlement.position.z = 0
+        self.scene.add(new_battlement)
+      })
+    })()
     
     ////////////////////////
     // Internal DOM Setup //
