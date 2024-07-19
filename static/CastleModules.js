@@ -230,17 +230,17 @@ export class ObjectPanelData extends PanelUI.Menu {
   selectHandler = e => {
     this.content.replaceChildren(fE('div', [
       'Inspecting ',
-      fE('text', { textContent: e.target.name, style: 'color:#0ff' }),
+      fE('text', { textContent: e.selection.name, style: 'color:#0ff' }),
       '. Hold shift to use these shortcuts:',
     ]))
     
     this.actions = []
     
-    Object.keys(e.target.controls).forEach((v, i, a) => {
+    Object.keys(e.selection.controls).forEach((v, i, a) => {
       this.actions[i] = this.content.fE('div', {
         textContent: (i + 1) +  ' - ' + v,
         tabIndex: 0,
-        onclick: e.target.controls[v],
+        onclick: e.selection.controls[v],
       })
     })
   }
@@ -253,8 +253,9 @@ export class ObjectPanelData extends PanelUI.Menu {
  * @example var shaderChanger = new CastleModules.ShaderChanger();
  * @example shaderChanger.nextMaterial(scene);
  */
-export const ShaderChanger = function ShaderChanger(options) {
-  EventEmitter.call(this, options);
+export class ShaderChanger extends EventTarget {
+  constructor() {
+    super()
   
   // @prop Object shaders -- Collection of shaders to switch between. The String 'original' designates materials orignally defined on each object individually
   this.shaders = {
@@ -311,6 +312,5 @@ export const ShaderChanger = function ShaderChanger(options) {
     
     this.emit('change', {currentShader: this.currentShader});
   }
+  }
 }
-ShaderChanger.prototype = Object.create(EventEmitter.prototype);
-ShaderChanger.prototype.constructor = ShaderChanger;

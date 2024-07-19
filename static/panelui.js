@@ -57,8 +57,9 @@ HTMLElement.prototype.fE = function() {
  * @example sidebar.on('do_stuff', function() {console.log('Doing stuff')});
  * @example sidebar.on('trigger', function(e) {console.log(e.buttonName === 'do_stuff')});
  */
-export const Sidebar = function Sidebar(options) {
-  EventEmitter.call(this);
+export class Sidebar extends EventTarget {
+  constructor() {
+    super()
   
   this.buttons = new Array(10)
   
@@ -152,11 +153,10 @@ export const Sidebar = function Sidebar(options) {
       this.buttons[index].dispatchEvent(new CustomEvent('trigger'));
     }
   });
+  }
 }
-Sidebar.prototype = Object.create(EventEmitter.prototype);
-Sidebar.prototype.constructor = Sidebar;
 
-export class Command extends EventEmitter {
+export class Command extends EventTarget {
   /** @type {string} */
   #icon
   get icon() { return this.#icon }
@@ -195,7 +195,7 @@ export class Command extends EventEmitter {
   }
 }
 
-export class Menu extends EventEmitter {
+export class Menu extends EventTarget {
   /** @type {string} */
   get heading() { return this._heading }
   
@@ -225,47 +225,45 @@ export class Menu extends EventEmitter {
   }
 }
 
-export const Panel = function Panel() {
-  EventEmitter.call(this);
+export class Panel extends EventTarget {
+  constructor() {
+    super()
+    
+    this.content = null
+    
+    // @prop HTMLElement domElement -- div tag that holds all of the Panel's HTML elements
+    this.domElement = fE('div', { className: 'panel', tabIndex: 0,
+      style: 'display:none' }, [
+      this.heading_element = fE('div', { className: 'panel_heading' }),
+    ])
+  }
   
-  this.content = null
+  open(heading, content) {
+    this.domElement.title = heading
+    this.heading_element.textContent = heading
+    
+    if(this.content) this.domElement.replaceChild(content, this.content)
+    else this.domElement.append(content)
+    this.domElement.style.display = ''
+    
+    this.content = content
+    
+    this.domElement.focus()
+    
+    this.emit('open')
+  }
   
-  // @prop HTMLElement domElement -- div tag that holds all of the Panel's HTML elements
-  this.domElement = fE('div', { className: 'panel', tabIndex: 0,
-    style: 'display:none' }, [
-    this.heading_element = fE('div', { className: 'panel_heading' }),
-  ])
-}
-Panel.prototype = Object.create(EventEmitter.prototype);
-Panel.prototype.constructor = Panel;
-
-Panel.prototype.open = function(heading, content) {
-  this.domElement.title = heading
-  this.heading_element.textContent = heading
+  close() {
+    this.domElement.style.display = 'none'
+    this.domElement.removeChild(this.content)
+    
+    this.content = null
+    
+    this.emit('close')
+  }
   
-  if(this.content) this.domElement.replaceChild(content, this.content)
-  else this.domElement.append(content)
-  this.domElement.style.display = ''
-  
-  this.content = content
-  
-  this.domElement.focus()
-  
-  this.emit('open')
-}
-
-// @method proto undefined close() -- Removes Panel's domElement from the document
-// @event close {} -- Fired on panel close
-Panel.prototype.close = function() {
-  this.domElement.style.display = 'none'
-  this.domElement.removeChild(this.content)
-  
-  this.content = null
-  
-  this.emit('close')
-}
-
-Panel.prototype.toggle = function(heading, content) {
-  if(this.content === content) this.close()
-  else this.open(heading, content)
+  toggle(heading, content) {
+    if(this.content === content) this.close()
+    else this.open(heading, content)
+  }
 }

@@ -29,7 +29,17 @@ html, body, lego-castle {
 }
 </style>
 
-<script type="text/javascript" src="EventEmitter.min.js"></script>
+<script>
+EventTarget.prototype.on = EventTarget.prototype.addEventListener
+
+EventTarget.prototype.emit = function emit(type, properties) {
+  const e = new Event(type)
+  for(key in properties) {
+    e[key] = properties[key]
+  }
+  this.dispatchEvent(e)
+}
+</script>
 </head>
 <body>
 <lego-castle></lego-castle>

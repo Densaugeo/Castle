@@ -704,8 +704,9 @@ export class IntObject extends THREE.Object3D {
  * @example picker.intObjects.push(someClickableObject);
  * @example picker.on('select', function(e) {console.log('Selected: ');console.log(e.target)});
  */
-export function Picker(options) {
-  EventEmitter.call(this, options);
+export class Picker extends EventTarget {
+  constructor(options) {
+    super()
   
   var self = this;
   
@@ -769,7 +770,7 @@ export function Picker(options) {
       self.indicator.matrix.copy(target.select);
       target.add(self.indicator);
       
-      self.emit('select', {target: target});
+      self.emit('select', {selection: target});
     }
   }
   
@@ -790,9 +791,8 @@ export function Picker(options) {
     renderer.domElement.addEventListener('click', self.clickHandler);
     renderer.domElement.addEventListener('touchstart', self.touchHandler);
   }
+  }
 }
-Picker.prototype = Object.create(EventEmitter.prototype);
-Picker.prototype.constructor = Picker;
 
 /**
  * @module THREE.Raycaster

@@ -140,7 +140,7 @@ export class DoubleGate extends THREE_Densaugeo.IntObject {
  * @module castleMap inherits EventEmitter
  * @description Actually defined as a singleton instance...going to worry about finding the right way to do it later
  */
-export const castleMap = new EventEmitter();
+export const castleMap = new EventTarget();
 
 // @prop THREE.Object3D castle -- Base object
 castleMap.castle = new THREE.Object3D();
