@@ -40,10 +40,19 @@ canvas {
 }
 `)
 
-class LegoCastle extends HTMLElement {
+class DensViewer extends HTMLElement {
   timePrevious = 0
   timeDelta = 0
   
+  scene = new THREE.Scene()
+  
+  constructor() {
+    super()
+  }
+}
+customElements.define('dens-viewer', DensViewer)
+
+class LegoCastle extends DensViewer {
   constructor() {
     super()
     
@@ -51,7 +60,7 @@ class LegoCastle extends HTMLElement {
     // THREE Setup //
     /////////////////
     
-    this.scene = new THREE.Scene()
+    //this.scene = new THREE.Scene()
     
     this.camera = new THREE.PerspectiveCamera( 45, 300 / 200, 1, 1000 )
     this.camera.matrix.compose(
@@ -146,7 +155,6 @@ class LegoCastle extends HTMLElement {
     shadow.appendChild(this.renderer.domElement)
     
     this.panel = new PanelUI.Panel()
-    shadow.append(this.panel.domElement)
     
     this.shaderChanger = new CastleModules.ShaderChanger()
     this.helpPanelData = new CastleModules.HelpPanelData(this.panel)
@@ -171,6 +179,8 @@ class LegoCastle extends HTMLElement {
     this.sidebar.setCommand(4, this.shaderPanelData.command)
     
     shadow.appendChild(this.sidebar.domElement)
+    // Append panel after sidebar, for tab ordering
+    shadow.append(this.panel.domElement)
     
     this.picker = new THREE_Densaugeo.Picker()
     

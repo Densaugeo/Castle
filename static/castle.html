@@ -26,6 +26,12 @@ html, body, lego-castle {
   margin: 0;
   border: none;
   padding: 0;
+  
+  /* In Chrome, overflows can occur due to Chrome storing viewport sizes as a
+  float internally, but reporting them rounded to the nearest integer. On
+  screens with resolution scaling this can cause overflows in situations where
+  the viewport size has been rounded up */
+  overflow: hidden;
 }
 </style>
 
