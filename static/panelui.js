@@ -6,9 +6,9 @@
  * Daisy-chainable HTML element maker. If an array is supplied as the second
  * argument, it is interpreted as children instead of properties
  * 
- * @param {String} tagName
- * @param {Object | Array} [properties={}]
- * @param {Array} [children=[]]
+ * @param {string} tagName
+ * @param {Object} properties
+ * @param {HTMLElement[]} children
  * @returns {HTMLElement}
  */
 export const fE = (tagName, properties={}, children=[]) => {
@@ -38,9 +38,9 @@ export const fE = (tagName, properties={}, children=[]) => {
 /**
  * Appends result of daisy-chainable element maker fE() as child element
  * 
- * @param {String} tagName
- * @param {Object | Array} [properties={}]
- * @param {Array} [children=[]]
+ * @param {string} tagName
+ * @param {Object} properties
+ * @param {HTMLElement[]} children
  * @returns {HTMLElement}
  */
 HTMLElement.prototype.fE = function() {

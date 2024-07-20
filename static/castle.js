@@ -12,7 +12,9 @@ export * as PanelUI from './panelui.js'
 import {GLTFLoader} from './three/loaders/GLTFLoader.js';
 
 THREE.ColorManagement.enabled = false
-const f3D = THREE_Densaugeo.forgeObject3D
+const f3D = THREE_Densaugeo.f3D
+const fM4 = THREE_Densaugeo.fM4
+const PI = Math.PI
 
 const lego_castle_style = new CSSStyleSheet()
 lego_castle_style.replaceSync(`
@@ -40,19 +42,10 @@ canvas {
 }
 `)
 
-class DensViewer extends HTMLElement {
+export class DensViewer extends HTMLElement {
   timePrevious = 0
   timeDelta = 0
   
-  scene = new THREE.Scene()
-  
-  constructor() {
-    super()
-  }
-}
-customElements.define('dens-viewer', DensViewer)
-
-class LegoCastle extends DensViewer {
   constructor() {
     super()
     
@@ -60,48 +53,49 @@ class LegoCastle extends DensViewer {
     // THREE Setup //
     /////////////////
     
-    //this.scene = new THREE.Scene()
+    this.scene = new THREE.Scene()
     
-    this.camera = new THREE.PerspectiveCamera( 45, 300 / 200, 1, 1000 )
-    this.camera.matrix.compose(
-      new THREE.Vector3(28.423, -49.239, 27.351),
-      new THREE.Quaternion().setFromEuler(new THREE.Euler(0.334*Math.PI,
-        0, 0.171*Math.PI, 'ZYX')),
-      new THREE.Vector3(1, 1, 1),
-    )
-    
-    this.ambient_light = f3D(THREE.AmbientLight, {
+    this.ambientLight = this.scene.f3D(THREE.AmbientLight, {
       color: new THREE.Color(0x666666),
       intensity: 3.14159,
-    })
-    this.scene.add(this.ambient_light);
+    }),
     
-    this.directional_light = f3D(THREE.DirectionalLight, {
+    this.directionalLight = this.scene.f3D(THREE.DirectionalLight, {
       color: new THREE.Color(0x666666),
       position: [-7.1, 2.75, 10],
       intensity: 3.14159,
     })
-    this.scene.add(this.directional_light);
     
     this.renderer = new THREE.WebGLRenderer( { antialias: true } );
     this.renderer.setSize(300, 200);
     this.renderer.setClearColor(0xC0C0C0, 1);
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace
     
+    this.camera = f3D(THREE.PerspectiveCamera, {
+      fov: 45, aspect: 300/200, near: 1, far: 1000,
+      matrix: fM4({ tx: 25, ty: -51, tz: 27, rz: PI/6 }).rotateX(PI/3),
+    })
+    
     this.controls = new THREE_Densaugeo.FreeControls(this.camera,
-      this.renderer.domElement, {panMouseSpeed: 0.05, dollySpeed: 5})
+      this.renderer.domElement, { panMouseSpeed: 0.05, dollySpeed: 5 })
+  }
+}
+customElements.define('dens-viewer', DensViewer)
+
+export class LegoCastle extends DensViewer {
+  constructor() {
+    super()
+    
+    this.water = this.scene.f3D(THREE.Mesh, {
+      geometry: new THREE.PlaneGeometry(128, 128, 1, 1),
+      material: new THREE_Densaugeo.WaterMaterial({ side: THREE.DoubleSide }),
+      position: [0, 0, -0.5],
+    })
     
     // Put stuff in scene
     this.scene.add(castleMap.castleMap.castle)
     
     castleMap.castleMap.load()
-    
-    this.water = f3D(THREE.Mesh, {
-      geometry: new THREE.PlaneGeometry(128, 128, 1, 1),
-      material: new THREE_Densaugeo.WaterMaterial({ side: THREE.DoubleSide }),
-      position: [0, 0, -0.5],
-    })
-    this.scene.add(this.water)
     
     ///////////////////////////
     // emg construction zone //

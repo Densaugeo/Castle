@@ -1,176 +1,102 @@
-/**
- * Dependencies: THREE.js
- */
 import * as THREE from 'three'
 
-// Chainable builder for THREE.Object3D stuff
-// Forces matrix use, because THREE.js .position and similar properties are flaky
-// Converts arrays to THREE.Vector3 or THREE.Euler for position, euler, and scale properties
-// f3D(THREE.Object3D, {position: [1, 2, 3]}, [child_one, child_two])
-// 'type' argument may be either a constructor or a clonable object
-export function forgeObject3D(type, properties, children) {
-  var o3D = typeof type === 'function' ? new type() : type;
-  
-  if(properties.position) {
-    switch(properties.position.constructor) {
-      case Array        : o3D.position.fromArray(properties.position); break;
-      case THREE.Vector3: o3D.position.copy     (properties.position); break;
-      default: throw Error('properties.position must be an Array or THREE.Vector3');
-    }
-    
-    delete properties.position;
+/**
+ * Daisy-chainable THREE.Object3D maker
+ * 
+ * If an array is supplied as the second argument, it is interpreted as children
+ * instead of properties
+ * 
+ * Position, euler, quaternion, and scale properties receive special handling to
+ * allow setting them with plain arrays. Matrix property receives special
+ * handling to disable Three's matrix auto update
+ * 
+ * @param {function | THREE.Object3D} type
+ * @param {Object} properties
+ * @param {THREE.Object3D[]} children
+ * @returns {THREE.Object3D}
+ */
+export function f3D(type, properties={}, children=[]) {
+  if(properties instanceof Array) {
+    children = properties.concat(children)
+    properties = {}
   }
   
+  /** @type {THREE.Object3D} */
+  const o3D = typeof type === 'function' ? new type() : type.clone()
+  
+  // Euler is processed before quaternion, so that if both are supplied
+  // quaternion will overwrite euler
   if(properties.euler) {
     switch(properties.euler.constructor) {
       case Array:
-        const euler = new THREE.Euler().fromArray(properties.euler);
-        o3D.quaternion.setFromEuler(euler);
-        break;
-      case THREE.Euler: o3D.quaternion.setFromEuler(properties.euler); break;
-      default: throw Error('properties.euler must be an Array or THREE.Euler');
+        const euler = new THREE.Euler().fromArray(properties.euler)
+        o3D.quaternion.setFromEuler(euler)
+        break
+      case THREE.Euler:
+        o3D.quaternion.setFromEuler(properties.euler)
+        break
+      default:
+        throw new Error('properties.euler must be an Array or THREE.Euler')
     }
     
-    delete properties.euler;
+    delete properties.euler
   }
   
-  if(properties.quaternion) {
-    switch(properties.quaternion.constructor) {
-      case Array           : o3D.quaternion.fromArray(properties.quaternion); break;
-      case THREE.Quaternion: o3D.quaternion.copy     (properties.quaternion); break;
-      default: throw Error('properties.quaternion must be an Array or THREE.Quaternion');
+  for(let key of ['position', 'quaternion', 'scale']) {
+    if(!(key in properties)) continue
+    
+    switch(properties[key].constructor) {
+      case Array               : o3D[key].fromArray(properties[key]); break
+      case o3D[key].constructor: o3D[key].copy     (properties[key]); break
+      default: throw new Error(`properties.${key} must be an Array or ` +
+        `THREE.${o3D[key].constructor.name}`)
     }
     
-    delete properties.quaternion;
+    delete properties[key]
   }
   
-  if(properties.scale) {
-    switch(properties.scale.constructor) {
-      case Array        : o3D.scale.fromArray(properties.scale); break;
-      case THREE.Vector3: o3D.scale.copy     (properties.scale); break;
-      default: throw Error('properties.scale must be an Array or THREE.Vector3');
-    }
-    
-    delete properties.scale;
+  if(properties.matrix) o3D.matrixAutoUpdate = false
+  
+  for(const key in properties) {
+    o3D[key] = properties[key]
   }
   
-  if(properties.matrix) {
-    o3D.matrixAutoUpdate = false;
-  }
-  
-  for(var i in properties) {
-    o3D[i] = properties[i];
-  }
-  
-  if(children) {
-    for(var i = 0, endi = children.length; i < endi; ++i) {
-      o3D.add(children[i]);
-    }
-  }
-  
-  return o3D;
+  if(children.length) o3D.add(...children)
+  return o3D
+}
+// Backwards compatibility, remove when stuff that refers to forgeObject3D is
+// refactored
+export const forgeObject3D = f3D
+
+/**
+ * Appends result of daisy-chainable element maker f3D() as child object
+ * 
+ * @param {function | THREE.Object3D} type
+ * @param {Object} properties
+ * @param {THREE.Object3D[]} children
+ * @returns {THREE.Object3D}
+ */
+THREE.Object3D.prototype.f3D = function() {
+  const result = f3D(...arguments)
+  this.add(result)
+  return result
 }
 
 // forgeObject3D specialized for making meshes. Expects clonable meshes/groups to be prepared in advance
 // forgeMesh.meshes.yourMesh = someMesh;
 // forgeMesh('yourMesh', {position: [-5, 0, 5]}, [child_one, child_two]);
-export function forgeMesh(meshName, properties, children) {
-  if(forgeMesh.meshes[meshName] == null) {
-    throw new Error('No mesh in THREE_Densaugeo.forgeMesh.meshes for mesh name "' + meshName + '".');
+// Probably going to get rid of this when I refactor castleMap.js, in favor of
+// passing o3Ds straight into f3D. Really this function is probably only around
+// because it mimiks the old structure I used for the meshmaker, which is now
+// long obsolete
+export function forgeMesh(meshKey, properties, children) {
+  if(forgeMesh.meshes[meshKey] == null) {
+    throw new Error('No mesh in THREE_Densaugeo.forgeMesh.meshes for mesh name "' + meshKey + '".');
   }
   
-  return forgeObject3D(forgeMesh.meshes[meshName].clone(), properties, children);
+  return forgeObject3D(forgeMesh.meshes[meshKey], properties, children);
 }
 forgeMesh.meshes = {};
-
-// meshMaker = new MeshMaker();
-// meshMaker.mesh = new THREE.Mesh(someGeometry, someMaterial);
-// meshMaker.addTo = THREE.Scene or THREE.Object3D;
-// meshMaker.make({position: THREE.Vector3, euler: THREE.Euler, scale: THREE.Vector3});
-//
-// Mesh is the mesh to be placed, addTo is an object to add it to. Properties may be passed to the new mesh, either as named arguments
-// or by setting them as properties of meshMaker.meshProperties. Properties given as named arguments take precedence over those on
-// meshMaker.meshProperties. Properties passed from meshMaker.meshProperties will have their .clone() functiosn called if available;
-// properties passed as named arguments are always passed directly
-//
-// Setting forceMatrix switches off THREE.js matrix auto-updates and causes MeshMaker
-// to build matrices from position, rotation, and scale
-//
-// Before use, meshMaker.mesh must be defined. addTo is optional. Then, meshes may be
-// instantiated in one of two ways (or a combination of these):
-//
-// Using arguments:
-// meshMaker.make({position: new THREE.Vector3(0, 0, 0), euler: new THREE.Euler(0, 0, 0), foo: 'bar'});
-//
-// Using defaults:
-// meshMaker.meshProperties.position = new THREE.Vector3(0, 0, 0);
-// meshMaker.meshProperties.euler = new THREE.Euler(0, 0, 0);
-// meshMaker.meshProperties.foo = 'bar';
-// meshMaker.make();
-export function MeshMaker() {
-  this.meshProperties = {};
-  
-  this.mesh = undefined;
-  
-  this.addTo = undefined;
-  
-  this.forceMatrix = false;
-}
-
-MeshMaker.prototype.make = function(args) {
-  // To make a mesh, you must have a mesh. This mesh is assumed to be a THREE.Mesh
-  var mesh = this.mesh.clone();
-  if(!(mesh instanceof THREE.Mesh)) throw new Error('THREE_Densaugeo.MeshMaker.mesh must be a THREE.Mesh');
-  
-  // I don't make any assumptions about what addTo points at.  This will try to run anything with an 'add' function you want to give it
-  if(this.addTo && typeof this.addTo.add === 'function') this.addTo.add(mesh);
-  
-  // Given arguments take precedence, followed by the MeshMaker's meshProperties, and then whatever the mesh already has
-  // These should behave as expected on their own, with the exception of MeshMaker's meshProperties, which need to be cloned for separation
-  for(var i in this.meshProperties) {
-    if(args[i] === undefined) {
-      if(typeof this.meshProperties[i].clone === 'function') {
-        mesh[i] = this.meshProperties[i].clone();
-      }
-      else {
-        mesh[i] = this.meshProperties[i];
-      }
-    }
-  }
-  for(var i in args) {
-    mesh[i] = args[i];
-  }
-  
-  if(this.forceMatrix) {
-    mesh.matrixAutoUpdate = false;
-    
-    var matrix = args.matrix || this.meshProperties.matrix;
-    
-    if(matrix instanceof THREE.Matrix4) {
-      mesh.matrix = matrix;
-    }
-    // If matrix is not specified, then recompose the matrix from components
-    else {
-      var position = args.position     || this.meshProperties.position;
-      var quaternion = args.quaternion || this.meshProperties.quaternion;
-      var euler = args.euler           || this.meshProperties.euler;
-      var scale = args.scale           || this.meshProperties.scale;
-      
-      // If quaternion is not specified but Euler angle is, build quaternion from Euler angle
-      if(quaternion == null) {
-        if(euler != null) {
-          quaternion = (new THREE.Quaternion).setFromEuler(euler);
-        }
-      }
-      
-      mesh.matrix.compose(position || mesh.position, quaternion || mesh.quaternion, scale || mesh.scale);
-    }
-    
-    mesh.matrixWorldNeedsUpdate = true;
-  }
-  
-  return mesh;
-}
 
 THREE.Vector3.prototype.rotateZ90 = function(count) {
   let previous_x
@@ -285,6 +211,10 @@ THREE.Matrix4.prototype.equals = function(m) {
   return r;
 }
 
+/**
+ * @param {Object} a
+ * @returns {THREE.Matrix4}
+ */
 THREE.Matrix4.prototype.forge = function(a) {
   var tx = a.tx || 0, ty = a.ty || 0, tz = a.tz || 0;
   var θx = a.rx || 0, θy = a.ry || 0, θz = a.rz || 0;
@@ -315,6 +245,14 @@ THREE.Matrix4.prototype.forge = function(a) {
   e[15] = 1;
   
   return this;
+}
+
+/**
+ * @param {Object} options
+ * @returns {THREE.Matrix4}
+ */
+export const fM4 = function(options) {
+  return new THREE.Matrix4().forge(options);
 }
 
 // panKeySpeed           - Units/ms
