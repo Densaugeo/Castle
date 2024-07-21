@@ -1,10 +1,28 @@
 :host {
+  /* This is required to make internal element positions relative to the web
+  component, instead of something in the external DOM */
+  position: relative;
+  
+  /* Using an inline-block display style is required for the custom element in
+  the external DOM to have the correct size */
+  display: inline-block;
+  
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 16px;
   color: #DDD;
   line-height: 1.42857143;
   background: #000;
 }
+
+input {
+  color: #0ff;
+}
+
+canvas {
+  position: absolute;
+  left: 36px;
+}
+
 #sidebar {
   position: absolute;
   width: 36px;

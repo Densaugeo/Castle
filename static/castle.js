@@ -16,32 +16,6 @@ const f3D = THREE_Densaugeo.f3D
 const fM4 = THREE_Densaugeo.fM4
 const PI = Math.PI
 
-const lego_castle_style = new CSSStyleSheet()
-lego_castle_style.replaceSync(`
-:host {
-  /* This is required to make internal element positions relative to the web
-  component, instead of something in the external DOM */
-  position: relative;
-  
-  /* Using an inline-block display style is required for the custom element in
-  the external DOM to have the correct size */
-  display: inline-block;
-}
-
-input {
-  color: #0ff;
-}
-
-.button.active_shader {
-  color: #00F;
-}
-
-canvas {
-  position: absolute;
-  left: 36px;
-}
-`)
-
 export class DensViewer extends HTMLElement {
   timePrevious = 0
   timeDelta = 0
@@ -137,8 +111,6 @@ export class LegoCastle extends DensViewer {
          be messed up -->
     <link rel="stylesheet" href="${new URL('panelui.css', import.meta.url).href}">
     `
-    shadow.adoptedStyleSheets = [lego_castle_style]
-    
     // Font Awesome must be linked to the external document as well, because it
     // uses custom fonts and those cannot be loaded from within web components
     document.head.fE('link', {
@@ -216,7 +188,10 @@ export class LegoCastle extends DensViewer {
     })
     
     castleMap.castleMap.on('loaded', () => {
-      this.shaderPanelData.changeShader({ materialRef: this.water.material })
+      this.shaderPanelData.changeShader({
+        currentShader: this.shaderChanger.currentShader,
+        materialRef: this.water.material,
+      })
       
       for(let i in castleMap.castleMap.gates) {
         this.picker.intObjects.push(castleMap.castleMap.gates[i])

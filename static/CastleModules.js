@@ -79,7 +79,7 @@ export class ShaderPanelData extends PanelUI.Menu {
     fE('br'),
     'Current shader:',
     fE('br'),
-    this.shaderButtons.original    = fE('b', {className: 'button active_shader', title: 'Phong', textContent: 'P', tabIndex: 0}),
+    this.shaderButtons.original    = fE('b', {className: 'button', title: 'Phong', textContent: 'P', tabIndex: 0}),
     this.shaderButtons.global      = fE('b', {className: 'button', title: 'Global coordinate grid', textContent: 'G', tabIndex: 0}),
     this.shaderButtons.local       = fE('b', {className: 'button', title: 'Local coordinate grid', textContent: 'L', tabIndex: 0}),
     this.shaderButtons.ghost       = fE('b', {className: 'button', title: 'Ghostly', textContent: 'H', tabIndex: 0}),
@@ -190,11 +190,11 @@ ShaderPanelData.prototype.changeShader = function(e) {
   this.currentShader = e.materialRef;
   
   for(var i in this.shaderButtons) {
-    this.shaderButtons[i].classList.remove('active_shader');
+    this.shaderButtons[i].classList.remove('enabled');
   }
   
   if(e && this.shaderButtons[e.currentShader]) {
-    this.shaderButtons[e.currentShader].classList.add('active_shader');
+    this.shaderButtons[e.currentShader].classList.add('enabled');
   }
   
   for(var i in this.controls) {
