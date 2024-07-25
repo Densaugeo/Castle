@@ -59,7 +59,7 @@ export class HelpPanelData extends PanelUI.Menu {
    * @param {Panel} panel
    */
   constructor(panel) {
-    super('fa-question', 'Help', panel)
+    super('help-circle.svg', 'Help', panel)
   }
 }
 
@@ -151,7 +151,7 @@ export class ShaderPanelData extends PanelUI.Menu {
    * @param {Panel} panel
    */
   constructor(panel) {
-    super('fa-cog', 'Shader Settings', panel)
+    super('settings.svg', 'Shader Settings', panel)
     
     var self = this
     
@@ -216,7 +216,7 @@ export class ObjectPanelData extends PanelUI.Menu {
    * @param {Panel} panel
    */
   constructor(panel) {
-    super('fa-search', 'Inspector', panel)
+    super('search.svg', 'Inspector', panel)
     
     this.content.addEventListener('keydown', e => {
       if(!e.altKey && !e.ctrlKey && e.shiftKey && 49 <= e.keyCode && e.keyCode <= 56) {

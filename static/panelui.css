@@ -65,19 +65,8 @@ canvas {
   z-index: 1;
 }
 
-#sidebar > div {
-  position: relative;
-  width: 36px;
-  height: 35px;
-  margin: 0;
+#sidebar > command-slot {
   border-bottom: 1px solid #444;
-  font-size: 12px;
-}
-
-#sidebar > div > .button.fa {
-  position: absolute;
-  left: 0;
-  top: 0;
 }
 
 .button {

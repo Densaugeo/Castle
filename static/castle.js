@@ -105,18 +105,8 @@ export class LegoCastle extends DensViewer {
     const shadow = this.attachShadow({ mode: 'closed' })
     this.shadow = shadow
     shadow.innerHTML = `
-    <link rel="stylesheet" href="${new URL('font-awesome/css/font-awesome.min.css', import.meta.url).href}">
-    
-    <!-- panelui.css must be imported after font-awesome, or icons sizes will
-         be messed up -->
     <link rel="stylesheet" href="${new URL('panelui.css', import.meta.url).href}">
     `
-    // Font Awesome must be linked to the external document as well, because it
-    // uses custom fonts and those cannot be loaded from within web components
-    document.head.fE('link', {
-      rel: 'stylesheet',
-      href: new URL('font-awesome/css/font-awesome.min.css', import.meta.url).href,
-    })
     
     shadow.appendChild(this.renderer.domElement)
     
@@ -129,20 +119,20 @@ export class LegoCastle extends DensViewer {
     
     this.sidebar = new PanelUI.Sidebar({ linked_panel: this.panel });
     
-    this.sidebar.setCommand(0, this.helpPanelData.command)
+    this.sidebar.slots[0].link(this.helpPanelData.command)
     
-    this.sidebar.setCommand(1, new PanelUI.Command('fa-eye', 'Change shader',
+    this.sidebar.slots[1].link(new PanelUI.Command('eye.svg', 'Change shader',
       () => { this.shaderChanger.nextMaterial(this.scene) }))
     
-    this.fs_command = new PanelUI.Command('fa-arrows-alt', 'Fullscreen', () => {
+    this.fs_command = new PanelUI.Command('maximize.svg', 'Fullscreen', () => {
       if(getFullscreenElement() == null) document.body.requestFullscreen()
       else document.exitFullscreen()
     })
-    this.sidebar.setCommand(2, this.fs_command)
+    this.sidebar.slots[2].link(this.fs_command)
     
-    this.sidebar.setCommand(3, this.objectPanelData.command)
+    this.sidebar.slots[3].link(this.objectPanelData.command)
     
-    this.sidebar.setCommand(4, this.shaderPanelData.command)
+    this.sidebar.slots[4].link(this.shaderPanelData.command)
     
     shadow.appendChild(this.sidebar.domElement)
     // Append panel after sidebar, for tab ordering

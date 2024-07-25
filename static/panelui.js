@@ -1,3 +1,4 @@
+import { svg_icons } from './icons/svg-icons.js'
 
 /**
  * Daisy-chainable HTML element maker. If an array is supplied as the second
@@ -100,21 +101,22 @@ export class Sidebar extends EventTarget {
   constructor() {
     super()
   
-  this.buttons = new Array(10)
-  
   // @prop HTMLElement domElement -- div tag that holds all of the Panel's HTML elements
   this.domElement = fE('div', {id: 'sidebar', tabIndex: 1, accessKey: '1'}, [
-    fE('div', ['1', this.buttons[0] = fE('i', { tabIndex: 0 })]),
-    fE('div', ['2', this.buttons[1] = fE('i', { tabIndex: 0 })]),
-    fE('div', ['3', this.buttons[2] = fE('i', { tabIndex: 0 })]),
-    fE('div', ['4', this.buttons[3] = fE('i', { tabIndex: 0 })]),
-    fE('div', ['5', this.buttons[4] = fE('i', { tabIndex: 0 })]),
-    fE('div', ['6', this.buttons[5] = fE('i', { tabIndex: 0 })]),
-    fE('div', ['7', this.buttons[6] = fE('i', { tabIndex: 0 })]),
-    fE('div', ['8', this.buttons[7] = fE('i', { tabIndex: 0 })]),
-    fE('div', ['9', this.buttons[8] = fE('i', { tabIndex: 0 })]),
-    fE('div', ['0', this.buttons[9] = fE('i', { tabIndex: 0 })]),
-  ]);
+    fE('command-slot', { key: '1' }),
+    fE('command-slot', { key: '2' }),
+    fE('command-slot', { key: '3' }),
+    fE('command-slot', { key: '4' }),
+    fE('command-slot', { key: '5' }),
+    fE('command-slot', { key: '6' }),
+    fE('command-slot', { key: '7' }),
+    fE('command-slot', { key: '8' }),
+    fE('command-slot', { key: '9' }),
+    fE('command-slot', { key: '0' }),
+  ])
+  
+  /** @type {CommandSlot[]} */
+  this.slots = this.domElement.querySelectorAll('command-slot')
   
   // @prop HTMLCollection children -- Alias for domElement.children
   this.children = this.domElement.children;
@@ -122,78 +124,144 @@ export class Sidebar extends EventTarget {
   this.domElement.title = 'Key: ' + this.domElement.accessKeyLabel;
   
   // @prop Object keyCodesToButtonIndices -- Look up a keyCode and get a button index
-  this.keyCodesToButtonIndices = {49: 0, 50: 1, 51: 2, 52: 3, 53: 4, 54: 5, 55: 6, 56: 7, 57: 8, 58: 9, 48: 10};
+  this.keyCodesToButtonIndices = {49: 0, 50: 1, 51: 2, 52: 3, 53: 4, 54: 5, 55: 6, 56: 7, 57: 8, 48: 9};
   
   // @prop Array buttonIndicesToKeyChars -- Look up a button index and get a char for its key
   this.buttonIndicesToKeyChars = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
   
-  this._commands = new Array(10).fill(null)
-  this._enable_listeners = new Array(10)
-  this._disable_listeners = new Array(10)
-  this.buttons.forEach((v, i) => {
-    this._enable_listeners [i] = () => v.classList.add   ('enabled')
-    this._disable_listeners[i] = () => v.classList.remove('enabled')
-  })
-  
-  /**
-   * @param {number} slot
-   * @param {Command} command
-  */
-  this.setCommand = function(slot, command) {
-    this.clearCommand(slot)
-    
-    this._commands[slot] = command
-    
-    const target = this.buttons[slot]
-    if(command.icon.length > 1) target.classList.add(command.icon)
-    if(command.icon.length === 1) target.textContent = command.icon
-    target.title = command.tooltip + '\n\n' + target.title
-    target.addEventListener('trigger', command.fn)
-    
-    command.on('enable' , this._enable_listeners [slot])
-    command.on('disable', this._disable_listeners[slot])
-  }
-  
-  /**
-   * @param {number} slot
-   */
-  this.clearCommand = function(slot) {
-    const target = this.buttons[slot]
-    target.className = 'fa button'
-    target.textContent = ''
-    target.title = 'Key: ' + ((slot + 1) % 10)
-    target.removeEventListener('trigger', this._commands[slot])
-    
-    if(this._commands[slot]) {
-      this._commands[slot].off('enable' , this._enable_listeners [slot])
-      this._commands[slot].off('disable', this._disable_listeners[slot])
-    }
-    
-    this._commands[slot] = null
-  }
-  
-  for(let i = 0; i < 10; ++i) this.clearCommand(i)
-  
-  this.domElement.addEventListener('click', e => {
-    this.domElement.focus()
-    e.target.dispatchEvent(new CustomEvent('trigger'))
-  })
-  
-  this.domElement.addEventListener('keydown', e => {
-    if(!e.altKey && !e.ctrlKey && !e.shiftKey && e.keyCode === 13 && e.target.classList.contains('button')) {
-      e.target.dispatchEvent(new CustomEvent('trigger'));
-    }
-  });
-  
   document.addEventListener('keydown', e => {
     var index = this.keyCodesToButtonIndices[e.keyCode];
     
-    if(!e.altKey && !e.ctrlKey && !e.shiftKey && this.buttons[index]) {
-      this.buttons[index].dispatchEvent(new CustomEvent('trigger'));
+    if(!e.altKey && !e.ctrlKey && !e.shiftKey && this.slots[index]) {
+      this.slots[index].click()
     }
   });
   }
 }
+
+export class CommandSlot extends HTMLElement {
+  /** @type {string} */
+  _key = ''
+  get key() { return this._key }
+  set key(v) {
+    this._key = v
+    this.update()
+  }
+  
+  /** @type {Command | null} */
+  linked_command = null
+  
+  _enable_listener  = () => this._el_button.classList.add('enabled')
+  _disable_listener = () => this._el_button.classList.remove('enabled')
+  
+  /**
+   * @param {Command} command
+   */
+  link(command) {
+    if(this.linked_command) throw new Error('Already linked to a command')
+    
+    this.linked_command = command
+    this.update()
+    
+    command.addEventListener('enable' , this._enable_listener )
+    command.addEventListener('disable', this._disable_listener)
+  }
+  
+  unlink() {
+    if(!this.linked_command) throw new Error('Already not linked to a command')
+    
+    this.linked_command.removeEventListener('enable' , this._enable_listener )
+    this.linked_command.removeEventListener('disable', this._disable_listener)
+    
+    this.linked_command = null
+    this.update()
+  }
+  
+  constructor() {
+    super()
+    
+    this.shadow = this.attachShadow({ mode: 'closed' })
+    
+    const sheet = new CSSStyleSheet()
+    sheet.replaceSync(`
+    :host {
+      position: relative;
+      display: flex;
+      width: 36px;
+      height: 36px;
+      
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 12px;
+      color: #ddd;
+      line-height: 1.42857143;
+      background: rgba(0, 0, 0, 0);
+    }
+    
+    button {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 36px;
+      height: 36px;
+      margin: 0;
+      border: none;
+      padding: 0;
+      background: rgba(0, 0, 0, 0);
+    }
+    
+    svg {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 24px;
+      height: 24px;
+      margin: 0;
+      padding: 6px;
+      color: #ddd;
+    }
+    button.enabled > svg {
+      color: #0ff;
+    }
+    button:hover > svg {
+      color: #0f0;
+    }
+    button:focus {
+      outline: 1px dashed #0f0;
+      outline-offset: -2px;
+    }
+    button:focus:active {
+      outline: none;
+    }
+    button:focus:active > svg {
+      color: #c0f;
+    }
+    `)
+    this.shadow.adoptedStyleSheets = [sheet]
+    
+    this.shadow.append(
+      this._node_text = fT(''),
+      this._el_button = this.shadow.fE('button', [
+        fE('i', { className: 'fa', }),
+      ]),
+    )
+  }
+  
+  update() {
+    const command = this.linked_command
+    
+    this._node_text.textContent = this.key
+    this._el_button.className = command?.enabled ? 'enabled' : ''
+    this._el_button.innerHTML = command?.icon ? svg_icons[command.icon] : ''
+    
+    this.setAttribute('title', [
+      command?.tooltip,
+      this.key ? `Key: ${this.key}` : '',
+    ].filter(Boolean).join('\n\n'))
+    
+    this.onclick = command?.fn
+  }
+}
+customElements.define('command-slot', CommandSlot)
 
 export class Command extends EventTarget {
   /** @type {string} */
@@ -222,8 +290,8 @@ export class Command extends EventTarget {
    * @param {function} fn
   */
   constructor(icon, tooltip, fn) {
-    if(icon.length > 1 && icon.substring(0, 3) !== 'fa-') {
-      throw TypeError('icon should be a single char or a font-awesome icon')
+    if(icon.slice(-4) !== '.svg') {
+      throw TypeError('icon should be a filename ending in .svg')
     }
     
     super()
