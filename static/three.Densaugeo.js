@@ -22,7 +22,7 @@ export function f3D(type, properties={}, children=[]) {
   }
   
   /** @type {THREE.Object3D} */
-  const o3D = typeof type === 'function' ? new type() : type.clone()
+  const o3D = typeof type === 'function' ? new type() : type
   
   // Euler is processed before quaternion, so that if both are supplied
   // quaternion will overwrite euler
@@ -89,12 +89,14 @@ THREE.Object3D.prototype.f3D = function() {
 // passing o3Ds straight into f3D. Really this function is probably only around
 // because it mimiks the old structure I used for the meshmaker, which is now
 // long obsolete
+// The .clone() call should probably be moved into f3D, but castleMap's current
+// layout makes that difficult
 export function forgeMesh(meshKey, properties, children) {
   if(forgeMesh.meshes[meshKey] == null) {
     throw new Error('No mesh in THREE_Densaugeo.forgeMesh.meshes for mesh name "' + meshKey + '".');
   }
   
-  return forgeObject3D(forgeMesh.meshes[meshKey], properties, children);
+  return forgeObject3D(forgeMesh.meshes[meshKey].clone(), properties, children);
 }
 forgeMesh.meshes = {};
 
@@ -477,6 +479,15 @@ export function FreeControls(camera, domElement, options) {
       });
     }, { 'once': true });
   } else {
+    // This gets a deprecation warning in Firefox. However, the associated MDN
+    // page shows it is not deprecated. A StackOverflow discussion suggests the
+    // notice is due to some issue with the W3C standard being technically
+    // unmaintained but also still the standard. In any case, the notice has
+    // been present for at least 6 years and the devicemotion event still shows
+    // no signs of going away
+    // 
+    // MDN page: https://developer.mozilla.org/en-US/docs/Web/API/Window/devicemotion_event
+    // StackOverflow thread: https://stackoverflow.com/questions/51110881/use-of-deviceorientation-events-in-firefox-give-warning
     window.addEventListener('devicemotion', accelHandler);
   }
   
