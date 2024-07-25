@@ -1,6 +1,3 @@
-/**
- * @depends EventEmitter.js
- */
 
 /**
  * Daisy-chainable HTML element maker. If an array is supplied as the second
@@ -45,6 +42,48 @@ export const fE = (tagName, properties={}, children=[]) => {
  */
 HTMLElement.prototype.fE = function() {
   return this.appendChild(fE(...arguments))
+}
+
+/**
+ * Appends result of daisy-chainable element maker fE() as child element
+ * 
+ * @param {string} tagName
+ * @param {Object} properties
+ * @param {HTMLElement[]} children
+ * @returns {HTMLElement}
+ */
+ShadowRoot.prototype.fE = function() {
+  return this.appendChild(fE(...arguments))
+}
+
+/**
+ * Abbreviation for document.createTextNode()
+ * 
+ * @param {string} text
+ * @returns {Text}
+ */
+export const fT = (text) => {
+  return document.createTextNode(text)
+}
+
+/**
+ * Appends result of document.createTextNode() as child element
+ * 
+ * @param {string} text
+ * @returns {Text}
+ */
+HTMLElement.prototype.fT = function(text) {
+  return this.appendChild(document.createTextNode(text))
+}
+
+/**
+ * Appends result of document.createTextNode() as child element
+ * 
+ * @param {string} text
+ * @returns {Text}
+ */
+ShadowRoot.prototype.fT = function(text) {
+  return this.appendChild(document.createTextNode(text))
 }
 
 /**
