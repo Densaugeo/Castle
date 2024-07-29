@@ -16,7 +16,6 @@ export const fE = (tagName, properties={}, children=[]) => {
   }
   
   const element = document.createElement(tagName)
-  
   for(const key in properties) {
     try {
       element[key] = properties[key]
@@ -32,6 +31,7 @@ export const fE = (tagName, properties={}, children=[]) => {
   element.append(...children)
   return element
 }
+globalThis.fE = fE
 
 /**
  * Appends result of daisy-chainable element maker fE() as child element
@@ -66,6 +66,7 @@ ShadowRoot.prototype.fE = function() {
 export const fT = (text) => {
   return document.createTextNode(text)
 }
+globalThis.fT = fT
 
 /**
  * Appends result of document.createTextNode() as child element
@@ -145,37 +146,30 @@ export class CommandSlot extends HTMLElement {
   get key() { return this._key }
   set key(v) {
     this._key = v
-    this.update()
+    this.render()
   }
   
   /** @type {Command | null} */
-  linked_command = null
-  
-  _enable_listener  = () => this._el_button.classList.add('enabled')
-  _disable_listener = () => this._el_button.classList.remove('enabled')
-  
-  /**
-   * @param {Command} command
-   */
-  link(command) {
-    if(this.linked_command) throw new Error('Already linked to a command')
+  _command = null
+  get command() { return this._command }
+  set command(v) {
+    if(this._command) {
+      this._command.off('enable' , this._enable_listener )
+      this._command.off('disable', this._disable_listener)
+    }
     
-    this.linked_command = command
-    this.update()
+    this._command = v
     
-    command.addEventListener('enable' , this._enable_listener )
-    command.addEventListener('disable', this._disable_listener)
+    if(this._command) {
+      this._command.on('enable' , this._enable_listener )
+      this._command.on('disable', this._disable_listener)
+    }
+    
+    this.render()
   }
   
-  unlink() {
-    if(!this.linked_command) throw new Error('Already not linked to a command')
-    
-    this.linked_command.removeEventListener('enable' , this._enable_listener )
-    this.linked_command.removeEventListener('disable', this._disable_listener)
-    
-    this.linked_command = null
-    this.update()
-  }
+  _enable_listener  = () => { this.classList.add('enabled') }
+  _disable_listener = () => { this.classList.remove('enabled') }
   
   constructor() {
     super()
@@ -217,9 +211,9 @@ export class CommandSlot extends HTMLElement {
       height: 24px;
       margin: 0;
       padding: 6px;
-      color: #ddd;
+      color: #a9d;
     }
-    button.enabled > svg {
+    :host(.enabled) > button > svg {
       color: #0ff;
     }
     button:hover > svg {
@@ -237,21 +231,24 @@ export class CommandSlot extends HTMLElement {
     }
     `)
     this.shadow.adoptedStyleSheets = [sheet]
-    
-    this.shadow.append(
-      this._node_text = fT(''),
-      this._el_button = this.shadow.fE('button', [
-        fE('i', { className: 'fa', }),
-      ]),
-    )
   }
   
-  update() {
-    const command = this.linked_command
+  connectedCallback() {
+    this.render()
+  }
+  
+  disconnectedCallback() {
+    // Nulling out linked command removes related event listeners
+    this.command = null
+  }
+  
+  render() {
+    const command = this.command
     
-    this._node_text.textContent = this.key
-    this._el_button.className = command?.enabled ? 'enabled' : ''
-    this._el_button.innerHTML = command?.icon ? svg_icons[command.icon] : ''
+    this.shadow.replaceChildren(
+      fT(this.key),
+      fE('button', { innerHTML: command?.icon ? svg_icons[command.icon] : '' }),
+    )
     
     this.setAttribute('title', [
       command?.tooltip,
@@ -259,6 +256,9 @@ export class CommandSlot extends HTMLElement {
     ].filter(Boolean).join('\n\n'))
     
     this.onclick = command?.fn
+    
+    if(command?.enabled) this.classList.add('enabled')
+    else this.classList.remove('enabled')
   }
 }
 customElements.define('command-slot', CommandSlot)
@@ -267,14 +267,17 @@ export class Command extends EventTarget {
   /** @type {string} */
   #icon
   get icon() { return this.#icon }
+  set icon(v) { this.#icon = v; this.emit('change') }
   
   /** @type {string} */
   #tooltip
   get tooltip() { return this.#tooltip }
+  set tooltip(v) { this.#tooltip = v; this.emit('change') }
   
   #fn
   /** @type {function} */
   get fn() { return this.#fn }
+  set fn(v) { this.#fn = v; this.emit('change') }
   
   /** @type {boolean} */
   #enabled = false
@@ -302,75 +305,81 @@ export class Command extends EventTarget {
   }
 }
 
-export class Menu extends EventTarget {
-  /** @type {string} */
-  get heading() { return this._heading }
-  
-  /** @type {HTMLElement} */
-  get content() { return this._content }
-  
-  /** @type {Command} */
-  get command() { return this._command }
-  
-  /**
-   * @param {string} icon
-   * @param {string} tooltip
-   * @param {Panel} panel
-   */
-  constructor(icon, tooltip, panel) {
-    super()
-    
-    this._command = new Command(icon, tooltip, () => {
-      panel.toggle(this.heading, this.content)
-    })
-    
-    // Suppress return values because EventEmitter sometimes uses them to remove
-    // listeners
-    panel.on('close', () => { this.command.enabled = false })
-    panel.on('open' , () => { this.command.enabled = panel.content ===
-      this.content })
-  }
-}
+/** @type DensPanel[] Used to ensure only one panel is open at a time. Hope to
+ *        remove this when I make panel movable */
+const panel_sync = []
 
-export class Panel extends EventTarget {
+export class DensPanel extends HTMLElement {
+  _heading = 'Heading Goes Here'
+  get heading() { return this._heading }
+  set heading(v) { this._heading = v; this.render() }
+  
+  _enabled = false
+  get enabled() { return this._enabled }
+  set enabled(v) {
+    this._enabled = v
+    this.render()
+    
+    this.command.enabled = v
+    
+    if(v) panel_sync.forEach(v => { if(v !== this) v.enabled = false })
+    if(v) this.focus()
+  }
+  
+  _command = new Command('help-circle.svg', 'Tooltip goes here', () => {
+    this.enabled = !this.enabled
+  })
+  get command() { return this._command }
+  get command_icon() { return this.command.icon }
+  set command_icon(v) { this.command.icon = v }
+  get command_tooltip() { return this.command.tooltip }
+  set command_tooltip(v) { this.command.tooltip = v }
+  
   constructor() {
     super()
     
-    this.content = null
+    panel_sync.push(this)
     
-    // @prop HTMLElement domElement -- div tag that holds all of the Panel's HTML elements
-    this.domElement = fE('div', { className: 'panel', tabIndex: 0,
-      style: 'display:none' }, [
-      this.heading_element = fE('div', { className: 'panel_heading' }),
-    ])
+    this.shadow = this.attachShadow({ mode: 'closed' })
+    
+    const sheet = new CSSStyleSheet()
+    sheet.replaceSync(`
+    :host {
+      position: relative;
+      display: inline-block;
+      
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      color: #ddd;
+      line-height: 1.42857143;
+      background: rgba(0, 0, 0, 0);
+    }
+    .panel_heading {
+      width: 100%;
+      min-height: 24px;
+      margin-bottom: 6px;
+      font-size: 16px;
+      color: #aff;
+      text-align: center;
+    }
+    `)
+    this.shadow.adoptedStyleSheets = [sheet]
   }
   
-  open(heading, content) {
-    this.domElement.title = heading
-    this.heading_element.textContent = heading
-    
-    if(this.content) this.domElement.replaceChild(content, this.content)
-    else this.domElement.append(content)
-    this.domElement.style.display = ''
-    
-    this.content = content
-    
-    this.domElement.focus()
-    
-    this.emit('open')
+  connectedCallback() {
+    this.render()
   }
   
-  close() {
-    this.domElement.style.display = 'none'
-    this.domElement.removeChild(this.content)
+  render() {
+    this.shadow.replaceChildren(
+      fE('div', { className: 'panel_heading' }, [this.heading]),
+      fE('slot', { name: 'content' }),
+    )
     
-    this.content = null
+    this.setAttribute('title', this.heading)
+    this.setAttribute('tabIndex', 0)
     
-    this.emit('close')
-  }
-  
-  toggle(heading, content) {
-    if(this.content === content) this.close()
-    else this.open(heading, content)
+    this.style.display = this.enabled ? '' : 'none'
   }
 }
+customElements.define('dens-panel', DensPanel)

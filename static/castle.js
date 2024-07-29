@@ -12,9 +12,9 @@ export * as PanelUI from './panelui.js'
 import {GLTFLoader} from './three/loaders/GLTFLoader.js';
 
 THREE.ColorManagement.enabled = false
-const f3D = THREE_Densaugeo.f3D
-const fM4 = THREE_Densaugeo.fM4
-const PI = Math.PI
+export const f3D = THREE_Densaugeo.f3D
+export const fM4 = THREE_Densaugeo.fM4
+export const PI = Math.PI
 
 export class DensViewer extends HTMLElement {
   timePrevious = 0
@@ -50,8 +50,25 @@ export class DensViewer extends HTMLElement {
       matrix: fM4({ tx: 25, ty: -51, tz: 27, rz: PI/6 }).rotateX(PI/3),
     })
     
-    this.controls = new THREE_Densaugeo.FreeControls(this.camera,
-      this.renderer.domElement, { panMouseSpeed: 0.05, dollySpeed: 5 })
+    ////////////////////////
+    // Internal DOM Setup //
+    ////////////////////////
+    
+    this.shadow = this.attachShadow({ mode: 'closed' })
+    
+    this.shadow.fE('link', {
+      rel: 'stylesheet',
+      href: new URL('panelui.css', import.meta.url).href,
+    })
+    
+    this.shadow.appendChild(this.renderer.domElement)
+    this.renderer.domElement.tabIndex = 0
+    
+    this.controls = new THREE_Densaugeo.FreeControls(this.camera, {
+      keyElement: this.shadow,
+      mouseElement: this.renderer.domElement,
+      panMouseSpeed: 0.05, dollySpeed: 5,
+    })
   }
 }
 customElements.define('dens-viewer', DensViewer)
@@ -65,6 +82,7 @@ export class LegoCastle extends DensViewer {
       material: new THREE_Densaugeo.WaterMaterial({ side: THREE.DoubleSide }),
       position: [0, 0, -0.5],
     })
+    CastleModules.shaderChanger.waterShader = this.water.material
     
     // Put stuff in scene
     this.scene.add(castleMap.castleMap.castle)
@@ -75,7 +93,7 @@ export class LegoCastle extends DensViewer {
     // emg construction zone //
     ///////////////////////////
     
-    const self = this
+    /*const self = this
     ;(async () => {
       const res = fetch('blocks.wasm')
       const { instance } = await WebAssembly.instantiateStreaming(res)
@@ -96,51 +114,41 @@ export class LegoCastle extends DensViewer {
         new_battlement.position.z = 0
         self.scene.add(new_battlement)
       })
-    })()
+    })()*/
     
     ////////////////////////
     // Internal DOM Setup //
     ////////////////////////
     
-    const shadow = this.attachShadow({ mode: 'closed' })
-    this.shadow = shadow
-    shadow.innerHTML = `
-    <link rel="stylesheet" href="${new URL('panelui.css', import.meta.url).href}">
-    `
+    const shadow = this.shadow
     
-    shadow.appendChild(this.renderer.domElement)
+    this.sidebar = new PanelUI.Sidebar()
     
-    this.panel = new PanelUI.Panel()
+    this.sidebar.slots[0].command = CastleModules.helpPanel.command
     
-    this.shaderChanger = new CastleModules.ShaderChanger()
-    this.helpPanelData = new CastleModules.HelpPanelData(this.panel)
-    this.objectPanelData = new CastleModules.ObjectPanelData(this.panel)
-    this.shaderPanelData = new CastleModules.ShaderPanelData(this.panel)
-    
-    this.sidebar = new PanelUI.Sidebar({ linked_panel: this.panel });
-    
-    this.sidebar.slots[0].link(this.helpPanelData.command)
-    
-    this.sidebar.slots[1].link(new PanelUI.Command('eye.svg', 'Change shader',
-      () => { this.shaderChanger.nextMaterial(this.scene) }))
+    this.sidebar.slots[1].command = CastleModules.shaderPanel.command
     
     this.fs_command = new PanelUI.Command('maximize.svg', 'Fullscreen', () => {
       if(getFullscreenElement() == null) document.body.requestFullscreen()
       else document.exitFullscreen()
     })
-    this.sidebar.slots[2].link(this.fs_command)
+    this.sidebar.slots[2].command = this.fs_command
     
-    this.sidebar.slots[3].link(this.objectPanelData.command)
+    this.sidebar.slots[3].command = CastleModules.inspectorPanel.command
     
-    this.sidebar.slots[4].link(this.shaderPanelData.command)
+    this.sidebar.slots[7].command = CastleModules.shaderPanel.toggles.local
+    this.sidebar.slots[8].command = CastleModules.shaderPanel.toggles.ghost
     
     shadow.appendChild(this.sidebar.domElement)
     // Append panel after sidebar, for tab ordering
-    shadow.append(this.panel.domElement)
+    shadow.append(CastleModules.helpPanel)
+    shadow.append(CastleModules.inspectorPanel)
+    shadow.append(CastleModules.shaderPanel)
     
     this.picker = new THREE_Densaugeo.Picker()
     
-    this.shaderChanger.container = shadow
+    CastleModules.shaderChanger.container = shadow
+    CastleModules.shaderChanger.scene = this.scene
     
     this.picker.container = shadow
     this.picker.setRenderer(this.renderer)
@@ -168,30 +176,13 @@ export class LegoCastle extends DensViewer {
       this.fs_command.enabled = document.fullscreenElement === document.body
     })
     
-    this.shaderChanger.on('change', e => {
-      e.materialRef = this.water.material
-      this.shaderPanelData.changeShader(e)
-    })
-    
-    this.shaderPanelData.on('set_material', e => {
-      this.shaderChanger.setMaterial(this.scene, e.materialName)
-    })
-    
     castleMap.castleMap.on('loaded', () => {
-      this.shaderPanelData.changeShader({
-        currentShader: this.shaderChanger.currentShader,
-        materialRef: this.water.material,
-      })
-      
       for(let i in castleMap.castleMap.gates) {
         this.picker.intObjects.push(castleMap.castleMap.gates[i])
       }
     })
     
-    // With the panels consolidated, I need a new way to unselect 3D objects
-    //this.panel.on('close', this.picker.unselect)
-    
-    this.picker.on('select', this.objectPanelData.selectHandler)
+    this.picker.on('select', CastleModules.inspectorPanel.selectHandler)
     
     if(this.width == null) this.width = 336
     if(this.height == null) this.height = 200

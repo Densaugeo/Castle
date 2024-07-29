@@ -36,7 +36,7 @@ canvas {
   overflow-y: auto;
 }
 
-.panel {
+dens-panel {
   position: absolute;
   left: 36px;
   top: 0;

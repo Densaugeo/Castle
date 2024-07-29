@@ -37,6 +37,7 @@ html, body, lego-castle {
 
 <script>
 EventTarget.prototype.on = EventTarget.prototype.addEventListener
+EventTarget.prototype.off = EventTarget.prototype.removeEventListener
 
 EventTarget.prototype.emit = function emit(type, properties) {
   const e = new Event(type)

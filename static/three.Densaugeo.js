@@ -257,6 +257,8 @@ export const fM4 = function(options) {
   return new THREE.Matrix4().forge(options);
 }
 
+// keyElement            - Event target for keyup/down events
+// mouseElement          - Event target for mouse / touch / scroll whell events
 // panKeySpeed           - Units/ms
 // panMouseSpeed         - Units/px
 // rotationKeySpeed      - Radians/ms
@@ -268,11 +270,16 @@ export const fM4 = function(options) {
 // joystickRotSpeed      - Radians/ms per fraction displaced
 // joystickThrottleSpeed - Units/ms per fraction displaced
 
-export function FreeControls(camera, domElement, options) {
+export function FreeControls(camera, options) {
   var self = this;
   
-  if(domElement == null) {
-    throw new TypeError('Error in THREE_Densaugeo.FreeControls constructor: domElement must be supplied');
+  const { keyElement, mouseElement } = options
+  
+  if(keyElement == null) {
+    throw new TypeError('options.keyElement must be supplied')
+  }
+  if(mouseElement == null) {
+    throw new TypeError('options.mouseElement must be supplied')
   }
   
   for(var i in options) {
@@ -284,55 +291,55 @@ export function FreeControls(camera, domElement, options) {
   
   var inputs = {}; // This particular ; really is necessary
   
-  document.addEventListener('keydown', function(e) {
+  keyElement.addEventListener('keydown', function(e) {
     if(!e.altKey && !e.ctrlKey && !e.shiftKey) {
       inputs[e.keyCode] = true;
     }
   });
   
-  document.addEventListener('keyup', function(e) {
+  keyElement.addEventListener('keyup', function(e) {
     delete inputs[e.keyCode];
   });
   
   // FF doesn't support standard mousewheel event
-  document.addEventListener('mousewheel', function(e) {
+  mouseElement.addEventListener('mousewheel', function(e) {
     camera.matrix.translateZ(-e.wheelDelta*self.dollySpeed/360);
   });
-  document.addEventListener('DOMMouseScroll', function(e) {
+  mouseElement.addEventListener('DOMMouseScroll', function(e) {
     camera.matrix.translateZ(e.detail*self.dollySpeed/3);
   });
   
   // Context menu interferes with mouse control
-  domElement.addEventListener('contextmenu', function(e) {
+  mouseElement.addEventListener('contextmenu', function(e) {
     e.preventDefault();
   });
   
   // Only load mousemove handler while mouse is depressed
-  domElement.addEventListener('mousedown', function(e) {
+  mouseElement.addEventListener('mousedown', function(e) {
     if(e.shiftKey) {
-      var requestPointerLock = domElement.requestPointerLock || domElement.mozRequestPointerLock || domElement.webkitRequestPointerLock;
-      requestPointerLock.call(domElement);
+      var requestPointerLock = mouseElement.requestPointerLock || mouseElement.mozRequestPointerLock || mouseElement.webkitRequestPointerLock;
+      requestPointerLock.call(mouseElement);
     } else if(e.which === 1) {
-      domElement.addEventListener('mousemove', mousePanHandler);
+      mouseElement.addEventListener('mousemove', mousePanHandler);
     } else if(e.which === 3) {
-      domElement.addEventListener('mousemove', mouseRotHandler);
+      mouseElement.addEventListener('mousemove', mouseRotHandler);
     }
   });
   
-  domElement.addEventListener('mouseup', function() {
-    domElement.removeEventListener('mousemove', mousePanHandler);
-    domElement.removeEventListener('mousemove', mouseRotHandler);
+  mouseElement.addEventListener('mouseup', function() {
+    mouseElement.removeEventListener('mousemove', mousePanHandler);
+    mouseElement.removeEventListener('mousemove', mouseRotHandler);
   });
   
-  domElement.addEventListener('mouseleave', function() {
-    domElement.removeEventListener('mousemove', mousePanHandler);
-    domElement.removeEventListener('mousemove', mouseRotHandler);
+  mouseElement.addEventListener('mouseleave', function() {
+    mouseElement.removeEventListener('mousemove', mousePanHandler);
+    mouseElement.removeEventListener('mousemove', mouseRotHandler);
   });
   
   var pointerLockHandler = function(e) {
     var pointerLockElement = document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement;
     
-    if(pointerLockElement === domElement) {
+    if(pointerLockElement === mouseElement) {
       document.addEventListener('mousemove', mouseRotHandler);
     } else {
       document.removeEventListener('mousemove', mouseRotHandler);
@@ -355,31 +362,31 @@ export function FreeControls(camera, domElement, options) {
   
   // Touchmove events do not work when directly added, they have to be added by a touchstart listener
   // I think this has to do with the default touch action being scrolling
-  domElement.addEventListener('touchstart', function(e) {
+  mouseElement.addEventListener('touchstart', function(e) {
     e.preventDefault();
     
     if(e.touches.length === 1) {
       accelActive = true;
       
-      var rect = domElement.getBoundingClientRect();
+      var rect = mouseElement.getBoundingClientRect();
       var lateralFraction = (e.touches[0].clientX - rect.left)/rect.width;
       
       if(lateralFraction < 0.9) {
         touchZeroPrevious = e.touches[0];
-        domElement.addEventListener('touchmove', TouchHandler);
+        mouseElement.addEventListener('touchmove', TouchHandler);
       } else {
         throttleZero = e.touches[0].clientY;
-        domElement.addEventListener('touchmove', touchThrottleHandler);
+        mouseElement.addEventListener('touchmove', touchThrottleHandler);
       }
     } else if(e.touches.length === 2) {
       touchOnePrevious = e.touches[1];
     }
   });
   
-  domElement.addEventListener('touchend', function(e) {
+  mouseElement.addEventListener('touchend', function(e) {
     if(e.touches.length === 0) {
-      domElement.removeEventListener('touchmove', TouchHandler);
-      domElement.removeEventListener('touchmove', touchThrottleHandler);
+      mouseElement.removeEventListener('touchmove', TouchHandler);
+      mouseElement.removeEventListener('touchmove', touchThrottleHandler);
       touchThrottle = rotationRatePitch = rotationRateYaw = rotationRateRoll = 0;
       accelActive = false;
     }
@@ -467,7 +474,7 @@ export function FreeControls(camera, domElement, options) {
   
   // Attach devicemotion listener on startup because attaching it during a touchstart event is horribly buggy in FF. Except on iPhone, then permission has to be requested (which is also inconsistent)
   if(typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-    domElement.addEventListener('touchend', () => {
+    mouseElement.addEventListener('touchend', () => {
       DeviceMotionEvent.requestPermission().then((a, b, c) => {
         if(a === 'denied') alert(
           'Accelerometer permissions denied, touch-look disabled.' +
