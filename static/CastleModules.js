@@ -56,8 +56,8 @@ export class ShaderChanger extends EventTarget {
 }
 export const shaderChanger = new ShaderChanger()
 
-/** @type PanelUI.DensPanel */
-export const helpPanel = fE('dens-panel', {
+/** @type PanelUI.DenPanel */
+export const helpPanel = fE('den-panel', {
   heading: 'Controls',
   command_icon: 'help-circle.svg',
   command_tooltip: 'Help',
@@ -106,7 +106,7 @@ export const helpPanel = fE('dens-panel', {
   ]),
 ])
 
-export class ShaderUI extends HTMLElement {
+export class DenShaderUI extends HTMLElement {
   /** @type {THREE.Material | null} */
   _currentShader = null
   get currentShader() { return this._currentShader }
@@ -144,13 +144,14 @@ export class ShaderUI extends HTMLElement {
     this.shadow.adoptedStyleSheets = [sheet]
     
     this.toggles = {
-      original   : new PanelUI.Command('camera.svg', 'Default'),
-      global     : new PanelUI.Command('globe.svg', 'Global coordinate grid'),
-      local      : new PanelUI.Command('grid.svg', 'Local coordinate grid'),
-      ghost      : new PanelUI.Command('ghost.svg', 'Ghostly'),
-      normals    : new PanelUI.Command('right-angle.svg',
-                                       'RBG-encoded normals'),
-      psychedelic: new PanelUI.Command('zap.svg', 'Psychedelic'),
+      original   : new PanelUI.DenCommand('camera.svg', 'Default'),
+      global     : new PanelUI.DenCommand('globe.svg',
+                                          'Global coordinate grid'),
+      local      : new PanelUI.DenCommand('grid.svg', 'Local coordinate grid'),
+      ghost      : new PanelUI.DenCommand('ghost.svg', 'Ghostly'),
+      normals    : new PanelUI.DenCommand('right-angle.svg',
+                                          'RBG-encoded normals'),
+      psychedelic: new PanelUI.DenCommand('zap.svg', 'Psychedelic'),
     }
     for(let [key, value] of Object.entries(this.toggles)) {
       value.fn = () => {
@@ -198,12 +199,12 @@ export class ShaderUI extends HTMLElement {
     this.shadow.replaceChildren(
       'Select Shader:',
       fE('div', { id: 'shader-toggles' }, [
-        fE('command-slot', { command: this.toggles.original    }),
-        fE('command-slot', { command: this.toggles.global      }),
-        fE('command-slot', { command: this.toggles.local       }),
-        fE('command-slot', { command: this.toggles.ghost       }),
-        fE('command-slot', { command: this.toggles.normals     }),
-        fE('command-slot', { command: this.toggles.psychedelic }),
+        fE('den-command-slot', { command: this.toggles.original    }),
+        fE('den-command-slot', { command: this.toggles.global      }),
+        fE('den-command-slot', { command: this.toggles.local       }),
+        fE('den-command-slot', { command: this.toggles.ghost       }),
+        fE('den-command-slot', { command: this.toggles.normals     }),
+        fE('den-command-slot', { command: this.toggles.psychedelic }),
       ]),
     )
     
@@ -239,20 +240,20 @@ export class ShaderUI extends HTMLElement {
     }
   }
 }
-customElements.define('shader-ui', ShaderUI)
+customElements.define('den-shader-ui', DenShaderUI)
 
-/** @type PanelUI.DensPanel */
-export const shaderPanel = fE('dens-panel', {
+/** @type PanelUI.DenPanel */
+export const shaderPanel = fE('den-panel', {
   heading: 'Shader Settings',
   command_icon: 'eye.svg',
   command_tooltip: 'Shader Settings',
 }, [
-  fE('shader-ui', { slot: 'content' }),
+  fE('den-shader-ui', { slot: 'content' }),
 ])
-shaderPanel.toggles = shaderPanel.querySelector('shader-ui').toggles
+shaderPanel.toggles = shaderPanel.querySelector('den-shader-ui').toggles
 
-/** @type PanelUI.DensPanel */
-export const inspectorPanel = fE('dens-panel', {
+/** @type PanelUI.DenPanel */
+export const inspectorPanel = fE('den-panel', {
   heading: 'Inspector',
   command_icon: 'search.svg',
   command_tooltip: 'Inspector',

@@ -9,19 +9,34 @@ export * as CastleModules from './CastleModules.js';
 import * as PanelUI from './panelui.js'
 export * as PanelUI from './panelui.js'
 
-import {GLTFLoader} from './three/loaders/GLTFLoader.js';
-
 THREE.ColorManagement.enabled = false
 export const f3D = THREE_Densaugeo.f3D
 export const fM4 = THREE_Densaugeo.fM4
 export const PI = Math.PI
 
-export class DensViewer extends HTMLElement {
+if(HTMLElement.prototype.requestFullscreen == null) {
+  HTMLElement.prototype.requestFullscreen = () => {
+    let message = 'Sorry, your browser does not allow fullscreen mode.'
+    
+    if(navigator.userAgent.includes('iPhone')) {
+      message += '\n\nYou appear to be using an iPhone. Apple does allow ' +
+        'fullscreen on iPads, but not on iPhones.'
+    }
+    
+    alert(message)
+  }
+}
+
+export class DenViewer extends HTMLElement {
   timePrevious = 0
   timeDelta = 0
   
   constructor() {
     super()
+    
+    // Default values for custom attributes
+    if(this.width  == null) this.width  = 580
+    if(this.height == null) this.height = 360
     
     /////////////////
     // THREE Setup //
@@ -41,53 +56,13 @@ export class DensViewer extends HTMLElement {
     })
     
     this.renderer = new THREE.WebGLRenderer( { antialias: true } );
-    this.renderer.setSize(300, 200);
-    this.renderer.setClearColor(0xC0C0C0, 1);
+    this.renderer.setClearColor(0xc0c0c0, 1);
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace
     
     this.camera = f3D(THREE.PerspectiveCamera, {
-      fov: 45, aspect: 300/200, near: 1, far: 1000,
+      fov: 45, near: 1, far: 1000,
       matrix: fM4({ tx: 25, ty: -51, tz: 27, rz: PI/6 }).rotateX(PI/3),
     })
-    
-    ////////////////////////
-    // Internal DOM Setup //
-    ////////////////////////
-    
-    this.shadow = this.attachShadow({ mode: 'closed' })
-    
-    this.shadow.fE('link', {
-      rel: 'stylesheet',
-      href: new URL('panelui.css', import.meta.url).href,
-    })
-    
-    this.shadow.appendChild(this.renderer.domElement)
-    this.renderer.domElement.tabIndex = 0
-    
-    this.controls = new THREE_Densaugeo.FreeControls(this.camera, {
-      keyElement: this.shadow,
-      mouseElement: this.renderer.domElement,
-      panMouseSpeed: 0.05, dollySpeed: 5,
-    })
-  }
-}
-customElements.define('dens-viewer', DensViewer)
-
-export class LegoCastle extends DensViewer {
-  constructor() {
-    super()
-    
-    this.water = this.scene.f3D(THREE.Mesh, {
-      geometry: new THREE.PlaneGeometry(128, 128, 1, 1),
-      material: new THREE_Densaugeo.WaterMaterial({ side: THREE.DoubleSide }),
-      position: [0, 0, -0.5],
-    })
-    CastleModules.shaderChanger.waterShader = this.water.material
-    
-    // Put stuff in scene
-    this.scene.add(castleMap.castleMap.castle)
-    
-    castleMap.castleMap.load()
     
     ///////////////////////////
     // emg construction zone //
@@ -116,98 +91,135 @@ export class LegoCastle extends DensViewer {
       })
     })()*/
     
+    /////////////////
+    // Other Setup //
+    /////////////////
+    
+    this.fs_command = new PanelUI.DenCommand('maximize.svg', 'Fullscreen',
+    () => {
+      if(document.fullscreenElement) document.exitFullscreen()
+      else this.requestFullscreen()
+    })
+    
+    CastleModules.shaderChanger.container = this.shadow
+    CastleModules.shaderChanger.scene = this.scene
+    
     ////////////////////////
     // Internal DOM Setup //
     ////////////////////////
     
-    const shadow = this.shadow
+    this.shadow = this.attachShadow({ mode: 'closed' })
     
-    this.sidebar = new PanelUI.Sidebar()
+    const sheet = new CSSStyleSheet()
+    sheet.replaceSync(`
+    :host {
+      background: #000;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      color: #ddd;
+      line-height: 1.42857143;
+    }
     
-    this.sidebar.slots[0].command = CastleModules.helpPanel.command
+    canvas {
+      position: absolute;
+      left: 36px;
+    }
     
-    this.sidebar.slots[1].command = CastleModules.shaderPanel.command
+    #sidebar {
+      position: absolute;
+      width: 36px;
+      height: 100%;
+      z-index: 2;
+      padding: 0;
+      background: #000;
+      /* This nulls out the tab selection box */
+      outline: none;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
     
-    this.fs_command = new PanelUI.Command('maximize.svg', 'Fullscreen', () => {
-      if(getFullscreenElement() == null) document.body.requestFullscreen()
-      else document.exitFullscreen()
+    #sidebar > den-command-slot {
+      border-bottom: 1px solid #444;
+    }
+    
+    den-panel {
+      position: absolute;
+      left: 36px;
+      top: 0;
+      width: 324px;
+      z-index: 2;
+      min-height: 24px;
+      max-height: calc(100% - 24px);
+      overflow: auto;
+      background: rgba(0, 0, 0, 0.75);
+    }
+    `)
+    this.shadow.adoptedStyleSheets = [PanelUI.default_style, sheet]
+    
+    this.controls = new THREE_Densaugeo.FreeControls(this.camera, {
+      keyElement: this,
+      mouseElement: this.renderer.domElement,
+      panMouseSpeed: 0.05, dollySpeed: 5,
     })
-    this.sidebar.slots[2].command = this.fs_command
+  }
+  
+  render() {
+    this.shadow.replaceChildren(
+      this.renderer.domElement,
+      fE('div', { id: 'sidebar', tabIndex: 1, accessKey: '1' }, [
+        fE('den-command-slot', { key: '1',
+          command: CastleModules.helpPanel.command }),
+        fE('den-command-slot', { key: '2',
+          command: CastleModules.shaderPanel.command }),
+        fE('den-command-slot', { key: '3',
+          command: this.fs_command }),
+        fE('den-command-slot', { key: '4',
+          command: CastleModules.inspectorPanel.command }),
+        fE('den-command-slot', { key: '5' }),
+        fE('den-command-slot', { key: '6' }),
+        fE('den-command-slot', { key: '7' }),
+        fE('den-command-slot', { key: '8',
+          command: CastleModules.shaderPanel.toggles.local }),
+        fE('den-command-slot', { key: '9',
+          command: CastleModules.shaderPanel.toggles.ghost }),
+        fE('den-command-slot', { key: '0' }),
+      ]),
+      CastleModules.helpPanel,
+      CastleModules.inspectorPanel,
+      CastleModules.shaderPanel,
+    )
     
-    this.sidebar.slots[3].command = CastleModules.inspectorPanel.command
+    // Needed to allow event listeners that return focus to this component when
+    // a focus element with the shadow DOM is removed
+    this.tabIndex = 0
     
-    this.sidebar.slots[7].command = CastleModules.shaderPanel.toggles.local
-    this.sidebar.slots[8].command = CastleModules.shaderPanel.toggles.ghost
+    this.shadow.querySelector('#sidebar').title = 'Sidebar\n\nKey: ' +
+      this.shadow.querySelector('#sidebar').accessKeyLabel
     
-    shadow.appendChild(this.sidebar.domElement)
-    // Append panel after sidebar, for tab ordering
-    shadow.append(CastleModules.helpPanel)
-    shadow.append(CastleModules.inspectorPanel)
-    shadow.append(CastleModules.shaderPanel)
+    this.keyCodesToSlots = {}
+    this.shadow.querySelectorAll('#sidebar > den-command-slot').forEach(v => {
+      this.keyCodesToSlots[v.key.charCodeAt(0)] = v
+    })
+  }
+  
+  connectedCallback() {
+    this.render()
     
-    this.picker = new THREE_Densaugeo.Picker()
+    // Custom attributes set in HTML must be explicitly applied
+    this._apply_dimensions()
     
-    CastleModules.shaderChanger.container = shadow
-    CastleModules.shaderChanger.scene = this.scene
-    
-    this.picker.container = shadow
-    this.picker.setRenderer(this.renderer)
-    this.picker.camera = this.camera
-    
-    // TODO That's a lot of very old vendor prefixes! I should test if they can
-    // be removed
-    if(HTMLElement.prototype.requestFullscreen == null) {
-      HTMLElement.prototype.requestFullscreen = HTMLElement.prototype.msRequestFullscreen || HTMLElement.prototype.mozRequestFullScreen || HTMLElement.prototype.webkitRequestFullscreen || (() => {
-        let message = 'Sorry, your browser does not allow fullscreen mode.'
-        
-        if(navigator.userAgent.includes('iPhone')) message += '\n\nYou appear to be using an iPhone. Apple does allow fullscreen on iPads, but not on iPhones.'
-        
-        alert(message)
-      })
-    }
-    if(document.exitFullscreen == null) {
-      document.exitFullscreen = document.msExitFullscreen || document.mozCancelFullScreen || document.webkitExitFullscreen;
-    }
-    const getFullscreenElement = function() {
-      return document.fullscreenElement || document.msFullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement;
-    }
+    this.addEventListener('keydown', e => {
+      const slot = this.keyCodesToSlots[e.keyCode]
+      if(!e.altKey && !e.ctrlKey && !e.shiftKey && slot) slot.click()
+    })
     
     document.addEventListener('fullscreenchange', () => {
-      this.fs_command.enabled = document.fullscreenElement === document.body
+      this.fs_command.enabled = document.fullscreenElement === this
+      this._apply_dimensions()
     })
     
-    castleMap.castleMap.on('loaded', () => {
-      for(let i in castleMap.castleMap.gates) {
-        this.picker.intObjects.push(castleMap.castleMap.gates[i])
-      }
-    })
-    
-    this.picker.on('select', CastleModules.inspectorPanel.selectHandler)
-    
-    if(this.width == null) this.width = 336
-    if(this.height == null) this.height = 200
-    
-    // Custom attributes set in HTML must be explicitly applied at construction
-    for(let att of this.constructor.observedAttributes) {
-      this.attributeChangedCallback(att, null, this.getAttribute(att))
-    }
-    
-    /////////////////////////
-    // Tick Initialization //
-    /////////////////////////
-    
-    this.renderer.setAnimationLoop(time => {
-      this.timePrevious = time
-      
-      this.renderer.setAnimationLoop(time => {
-        this.timeDelta = -this.timePrevious + (this.timePrevious = time)
-        
-        // Also updates scene-wide shader materials, because they are applied to
-        // the water mesh too
-        if(this.water.material.tick) this.water.material.tick(this.timeDelta/1000)
-        
-        this.renderer.render(this.scene, this.camera)
-      })
+    this.renderer.setAnimationLoop(() => {
+      this.renderer.render(this.scene, this.camera)
     })
   }
   
@@ -216,6 +228,19 @@ export class LegoCastle extends DensViewer {
   
   get height( ) { return this.getAttribute('height'   ) }
   set height(v) { return this.setAttribute('height', v) }
+  
+  _apply_dimensions() {
+    const width = this.fs_command.enabled ? window.innerWidth :
+      parseInt(this.width)
+    const height = this.fs_command.enabled ? window.innerHeight :
+      parseInt(this.height)
+    
+    this.camera.aspect = (width - 36)/height
+    this.renderer.setSize(width - 36, height)
+    this.style.width = width + 'px'
+    this.style.height = height + 'px'
+    this.camera.updateProjectionMatrix()
+  }
   
   static get observedAttributes() {
     return ['width', 'height']
@@ -226,25 +251,64 @@ export class LegoCastle extends DensViewer {
    * @param {string} old_value 
    * @param {string} new_value 
    */
-  attributeChangedCallback(name, old_value, new_value) {
-    const v = parseInt(new_value)
+  attributeChangedCallback(name, _old_value, _new_value) {
+    if(name === 'width' || name === 'height') this._apply_dimensions()
+  }
+}
+customElements.define('den-viewer', DenViewer)
+
+export class LegoCastle extends DenViewer {
+  constructor() {
+    super()
     
-    switch(name) {
-      case 'width':
-        this.camera.aspect = (v - 36)/this.renderer.domElement.height
-        this.renderer.setSize(v - 36, this.renderer.domElement.height)
-        
-        this.style.width = v + 'px'
-        break
-      case 'height':
-        this.camera.aspect = this.renderer.domElement.width/v
-        this.renderer.setSize(this.renderer.domElement.width, v)
-        
-        this.style.height = v + 'px'
-        break
-    }
+    this.water = this.scene.f3D(THREE.Mesh, {
+      geometry: new THREE.PlaneGeometry(128, 128, 1, 1),
+      material: new THREE_Densaugeo.WaterMaterial({ side: THREE.DoubleSide }),
+      position: [0, 0, -0.5],
+    })
+    CastleModules.shaderChanger.waterShader = this.water.material
     
-    this.camera.updateProjectionMatrix()
+    // Put stuff in scene
+    this.scene.add(castleMap.castleMap.castle)
+    
+    castleMap.castleMap.load()
+    
+    ////////////////////////
+    // Internal DOM Setup //
+    ////////////////////////
+    
+    this.picker = new THREE_Densaugeo.Picker()
+    this.picker.container = this.shadow
+    this.picker.setRenderer(this.renderer)
+    this.picker.camera = this.camera
+    
+    castleMap.castleMap.on('loaded', () => {
+      for(let i in castleMap.castleMap.gates) {
+        this.picker.intObjects.push(castleMap.castleMap.gates[i])
+      }
+    })
+    
+    this.picker.on('select', CastleModules.inspectorPanel.selectHandler)
+  }
+  
+  connectedCallback() {
+    super.connectedCallback()
+    
+    /////////////////////////
+    // Tick Initialization //
+    /////////////////////////
+    
+    this.renderer.setAnimationLoop(time => {
+      this.timeDelta = -(this.timePrevious ?? time) + (this.timePrevious = time)
+      
+      // Also updates scene-wide shader materials, because they are applied to
+      // the water mesh too
+      if(this.water.material.tick) {
+        this.water.material.tick(this.timeDelta/1000)
+      }
+      
+      this.renderer.render(this.scene, this.camera)
+    })
   }
 }
 customElements.define('lego-castle', LegoCastle)

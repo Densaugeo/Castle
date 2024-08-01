@@ -70,6 +70,7 @@ import * as index from './castle.js'
 for(const key in index) window[key] = index[key]
 
 window.lego_castle = document.getElementsByTagName('lego-castle')[0]
+lego_castle.focus()
 
 // WebGL occupies entire browser window
 function resizer() {

@@ -292,7 +292,16 @@ export function FreeControls(camera, options) {
   var inputs = {}; // This particular ; really is necessary
   
   keyElement.addEventListener('keydown', function(e) {
+    // Added later mainly to prevent arrow key events inside viewer elemnts
+    // from scrolling the page they're on. Should move the watched keys onto
+    // their own object whenever I refactor FreeControls
     if(!e.altKey && !e.ctrlKey && !e.shiftKey) {
+      for(const key in self) {
+        if(key.slice(0, 3) === 'key' && self[key] === e.keyCode) {
+          e.preventDefault()
+        }
+      }
+      
       inputs[e.keyCode] = true;
     }
   });
@@ -303,9 +312,11 @@ export function FreeControls(camera, options) {
   
   // FF doesn't support standard mousewheel event
   mouseElement.addEventListener('mousewheel', function(e) {
+    e.preventDefault()
     camera.matrix.translateZ(-e.wheelDelta*self.dollySpeed/360);
   });
   mouseElement.addEventListener('DOMMouseScroll', function(e) {
+    e.preventDefault()
     camera.matrix.translateZ(e.detail*self.dollySpeed/3);
   });
   

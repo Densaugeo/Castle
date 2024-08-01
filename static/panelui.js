@@ -88,59 +88,32 @@ ShadowRoot.prototype.fT = function(text) {
   return this.appendChild(document.createTextNode(text))
 }
 
-/**
- * @module PanelUI.Sidebar inherits EventEmitter
- * @description Makes a sidebar. Buttons added to the sidebar can be triggered by clicks or keyboard shortcuts 1-9, 0, -, and =
- * @description Icons come from Font Awesome and are specified in the faClass option
- * 
- * @example var sidebar = new PanelUI.Sidebar();
- * @example sidebar.addButton({buttonName: 'do_stuff', faClass: 'fa-question', title: 'Tooltip text'});
- * @example sidebar.on('do_stuff', function() {console.log('Doing stuff')});
- * @example sidebar.on('trigger', function(e) {console.log(e.buttonName === 'do_stuff')});
- */
-export class Sidebar extends EventTarget {
-  constructor() {
-    super()
+export const default_style = new CSSStyleSheet()
+default_style.replaceSync(`
+:host {
+  /* This is required to make internal element positions relative to the web
+  component, instead of something in the external DOM */
+  position: relative;
   
-  // @prop HTMLElement domElement -- div tag that holds all of the Panel's HTML elements
-  this.domElement = fE('div', {id: 'sidebar', tabIndex: 1, accessKey: '1'}, [
-    fE('command-slot', { key: '1' }),
-    fE('command-slot', { key: '2' }),
-    fE('command-slot', { key: '3' }),
-    fE('command-slot', { key: '4' }),
-    fE('command-slot', { key: '5' }),
-    fE('command-slot', { key: '6' }),
-    fE('command-slot', { key: '7' }),
-    fE('command-slot', { key: '8' }),
-    fE('command-slot', { key: '9' }),
-    fE('command-slot', { key: '0' }),
-  ])
+  /* Using a flew or inline-block display style is required for the custom
+  element in the external DOM to have the correct size. Flex seems to offer more
+  flexibility, as you'd expect */
+  display: flex;
+  flex-flow: column;
   
-  /** @type {CommandSlot[]} */
-  this.slots = this.domElement.querySelectorAll('command-slot')
+  /* Ensure components have exactly their specified dimensions by default */
+  margin: 0;
+  border: none;
+  padding: 0;
+  box-sizing: border-box;
   
-  // @prop HTMLCollection children -- Alias for domElement.children
-  this.children = this.domElement.children;
-  
-  this.domElement.title = 'Key: ' + this.domElement.accessKeyLabel;
-  
-  // @prop Object keyCodesToButtonIndices -- Look up a keyCode and get a button index
-  this.keyCodesToButtonIndices = {49: 0, 50: 1, 51: 2, 52: 3, 53: 4, 54: 5, 55: 6, 56: 7, 57: 8, 48: 9};
-  
-  // @prop Array buttonIndicesToKeyChars -- Look up a button index and get a char for its key
-  this.buttonIndicesToKeyChars = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
-  
-  document.addEventListener('keydown', e => {
-    var index = this.keyCodesToButtonIndices[e.keyCode];
-    
-    if(!e.altKey && !e.ctrlKey && !e.shiftKey && this.slots[index]) {
-      this.slots[index].click()
-    }
-  });
-  }
+  /* Some sane defaults */
+  outline: none;
+  background: none;
 }
+`)
 
-export class CommandSlot extends HTMLElement {
+export class DenCommandSlot extends HTMLElement {
   /** @type {string} */
   _key = ''
   get key() { return this._key }
@@ -149,7 +122,7 @@ export class CommandSlot extends HTMLElement {
     this.render()
   }
   
-  /** @type {Command | null} */
+  /** @type {DenCommand | null} */
   _command = null
   get command() { return this._command }
   set command(v) {
@@ -179,16 +152,10 @@ export class CommandSlot extends HTMLElement {
     const sheet = new CSSStyleSheet()
     sheet.replaceSync(`
     :host {
-      position: relative;
-      display: flex;
       width: 36px;
       height: 36px;
-      
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-size: 12px;
-      color: #ddd;
-      line-height: 1.42857143;
-      background: rgba(0, 0, 0, 0);
+      font-size: 14px;
+      color: #aaa;
     }
     
     button {
@@ -200,7 +167,7 @@ export class CommandSlot extends HTMLElement {
       margin: 0;
       border: none;
       padding: 0;
-      background: rgba(0, 0, 0, 0);
+      background: none;
     }
     
     svg {
@@ -230,7 +197,7 @@ export class CommandSlot extends HTMLElement {
       color: #c0f;
     }
     `)
-    this.shadow.adoptedStyleSheets = [sheet]
+    this.shadow.adoptedStyleSheets = [default_style, sheet]
   }
   
   connectedCallback() {
@@ -261,9 +228,9 @@ export class CommandSlot extends HTMLElement {
     else this.classList.remove('enabled')
   }
 }
-customElements.define('command-slot', CommandSlot)
+customElements.define('den-command-slot', DenCommandSlot)
 
-export class Command extends EventTarget {
+export class DenCommand extends EventTarget {
   /** @type {string} */
   #icon
   get icon() { return this.#icon }
@@ -305,11 +272,11 @@ export class Command extends EventTarget {
   }
 }
 
-/** @type DensPanel[] Used to ensure only one panel is open at a time. Hope to
+/** @type DenPanel[] Used to ensure only one panel is open at a time. Hope to
  *        remove this when I make panel movable */
 const panel_sync = []
 
-export class DensPanel extends HTMLElement {
+export class DenPanel extends HTMLElement {
   _heading = 'Heading Goes Here'
   get heading() { return this._heading }
   set heading(v) { this._heading = v; this.render() }
@@ -324,9 +291,16 @@ export class DensPanel extends HTMLElement {
     
     if(v) panel_sync.forEach(v => { if(v !== this) v.enabled = false })
     if(v) this.focus()
+    
+    // If a DOM element with focues is removed (or not displayed), this messes
+    // with focus and tab ordering. Move focus up to a containing element
+    if(!v && this.matches(':focus-within')) {
+      if(this.parentNode instanceof ShadowRoot) this.parentNode.host.focus()
+      else this.parentNode.focus()
+    }
   }
   
-  _command = new Command('help-circle.svg', 'Tooltip goes here', () => {
+  _command = new DenCommand('help-circle.svg', 'Tooltip goes here', () => {
     this.enabled = !this.enabled
   })
   get command() { return this._command }
@@ -345,14 +319,9 @@ export class DensPanel extends HTMLElement {
     const sheet = new CSSStyleSheet()
     sheet.replaceSync(`
     :host {
-      position: relative;
-      display: inline-block;
-      
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-size: 16px;
-      color: #ddd;
-      line-height: 1.42857143;
-      background: rgba(0, 0, 0, 0);
+      border: 4px solid #088;
+      padding: 8px;
+      background: #000;
     }
     .panel_heading {
       width: 100%;
@@ -363,7 +332,7 @@ export class DensPanel extends HTMLElement {
       text-align: center;
     }
     `)
-    this.shadow.adoptedStyleSheets = [sheet]
+    this.shadow.adoptedStyleSheets = [default_style, sheet]
   }
   
   connectedCallback() {
@@ -382,4 +351,4 @@ export class DensPanel extends HTMLElement {
     this.style.display = this.enabled ? '' : 'none'
   }
 }
-customElements.define('dens-panel', DensPanel)
+customElements.define('den-panel', DenPanel)
